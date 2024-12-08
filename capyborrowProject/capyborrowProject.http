@@ -1,0 +1,6 @@
+@capyborrowProject_HostAddress = http://localhost:5149
+
+GET {{capyborrowProject_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
