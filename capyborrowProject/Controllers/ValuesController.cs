@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-// For Testing. Will be replaced or deleted later
+// For testing. Will be replaced or deleted later
 
 namespace capyborrowProject.Controllers
 {
