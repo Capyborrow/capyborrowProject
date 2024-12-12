@@ -10,7 +10,7 @@ namespace TestProject
         [Fact]
         public void Get_ReturnsHelloWorld()
         {
-            var controller = new ValuesController();
+            var controller = new APIController();
             var result = controller.Get() as OkObjectResult;
 
             Assert.NotNull(result);
