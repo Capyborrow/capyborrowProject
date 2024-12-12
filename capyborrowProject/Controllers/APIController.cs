@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using capyborrowProject.Models;
+using capyborrowProject.Data;
 
 namespace capyborrowProject.Controllers
 {
@@ -7,6 +9,13 @@ namespace capyborrowProject.Controllers
     [ApiController]
     public class APIController : ControllerBase
     {
+        private readonly APIContext _context;
+
+        public APIController(APIContext context)
+        {
+            _context = context;
+        }
+
         [HttpGet]
         public IActionResult Get()
         {
