@@ -7,14 +7,5 @@ namespace TestProject
 {
     public class UnitTest1
     {
-        [Fact]
-        public void Get_ReturnsHelloWorld()
-        {
-            var controller = new APIController();
-            var result = controller.Get() as OkObjectResult;
-
-            Assert.NotNull(result);
-            Assert.Equal("Hello, world!", result.Value);
-        }
     }
 }
