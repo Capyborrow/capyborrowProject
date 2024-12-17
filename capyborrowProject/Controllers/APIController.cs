@@ -25,7 +25,7 @@ namespace capyborrowProject.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Student>> GetStudent(int id)
+        public async Task<ActionResult<IEnumerable<Student>>> GetStudent(int id)
         {
             var student = await _context.Students.FindAsync(id);
 
