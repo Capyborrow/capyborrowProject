@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using capyborrowProject.Models;
 using capyborrowProject.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace capyborrowProject.Controllers
 {
@@ -17,16 +18,24 @@ namespace capyborrowProject.Controllers
         }
 
         [HttpGet]
-        public IActionResult Get()
+        public async Task<ActionResult<IEnumerable<Student>>> GetAllStudents()
         {
-            return Ok(new string[] { "value1", "value2" });
+            var students = await _context.Students.ToListAsync();
+            return Ok(students);
         }
 
         [HttpGet("{id}")]
-        public IActionResult Get(int id)
+        public async Task<ActionResult<Student>> GetStudent(int id)
         {
-            return Ok("value");
-        }
+            var student = await _context.Students.FindAsync(id);
+
+            if (student is null)
+            {
+                return NotFound();
+            }
+
+            return Ok(student);
+        }   
 
         [HttpPost]
         public IActionResult Post([FromBody] string value)
