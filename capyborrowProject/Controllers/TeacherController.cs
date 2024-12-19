@@ -10,7 +10,7 @@ namespace capyborrowProject.Controllers
     [ApiController]
     public class TeacherController : ControllerBase
     {
-        private readonly APIContext _context;
+        private readonly APIContext _context; 
 
         public TeacherController(APIContext context)
         {
