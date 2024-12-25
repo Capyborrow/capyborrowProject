@@ -5,14 +5,14 @@
         public enum TaskStatus
         {
             InReview,
-            Evaluated,
+            Marked,
             PastDeadline
         }
 
-        public int ID { get; set; }
-        public TaskStatus Status { get; set; }
-        public string? Description { get; set; }
-        public required Teacher Teacher { get; set; }
-
+        public int Id { get; set; }
+        public required string title { get; set; }
+        public TaskStatus status { get; set; }
+        public string description { get; set; } = string.Empty;
+        public required Teacher teacher { get; set; }
     }
 }

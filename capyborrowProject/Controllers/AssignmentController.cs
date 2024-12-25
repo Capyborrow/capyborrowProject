@@ -43,13 +43,13 @@ namespace capyborrowProject.Controllers
             _context.Assignments.Add(assignment);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetAssignment), new { id = assignment.ID }, assignment);
+            return Ok(assignment);
         }
 
         [HttpPut("{id}")]
         public async Task<IActionResult> PutAssignment(int id, Assignment assignment)
         {
-            if (id != assignment.ID)
+            if (id != assignment.Id)
             {
                 return BadRequest();
             }
@@ -62,7 +62,7 @@ namespace capyborrowProject.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!_context.Assignments.Any(e => e.ID == id))
+                if (!_context.Assignments.Any(e => e.Id == id))
                 {
                     return NotFound();
                 }

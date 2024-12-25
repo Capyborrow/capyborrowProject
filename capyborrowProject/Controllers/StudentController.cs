@@ -3,6 +3,7 @@ using capyborrowProject.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using capyborrowProject.Helpers;
 
 namespace capyborrowProject.Controllers
 {
@@ -38,18 +39,30 @@ namespace capyborrowProject.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Student>> PostStudent(Student student)
+        public async Task<ActionResult<Student>> PostStudent(Student studentToAdd)
         {
+            var student = new Student
+            {
+                Id = studentToAdd.Id,
+                firstName = studentToAdd.firstName,
+                middleName = studentToAdd.middleName,
+                lastName = studentToAdd.lastName,
+                passwordHash = PasswordHelper.HashPassword(studentToAdd.passwordHash),
+                email = studentToAdd.email,
+                group = studentToAdd.group,
+                course = studentToAdd.course
+            };
+
             _context.Students.Add(student);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetStudent), new { id = student.ID }, student);
+            return Ok(student);
         }
 
         [HttpPut("{id}")]
         public async Task<IActionResult> PutStudent(int id, Student student)
         {
-            if (id != student.ID)
+            if (id != student.Id)
             {
                 return BadRequest();
             }
@@ -62,7 +75,7 @@ namespace capyborrowProject.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!_context.Teachers.Any(e => e.ID == id))
+                if (!_context.Teachers.Any(e => e.Id == id))
                 {
                     return NotFound();
                 }
