@@ -75,7 +75,7 @@ namespace capyborrowProject.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!_context.Teachers.Any(e => e.Id == id))
+                if (!_context.Students.Any(e => e.Id == id))
                 {
                     return NotFound();
                 }
