@@ -2,7 +2,7 @@
 
 ## Table of Contents
 - [Introduction](#introduction)
-- [Getting started](#project-stucture)
+- [Getting started](#getting-started)
 - [Project structure](#project-stucture)
 - [Code explanation](#code-explanation)
 - [Useful links](#useful-links)
@@ -44,7 +44,8 @@ For now, Solution 'capyborrowProject' consists of two projects: _cappyborrowProj
 - **TestProject**: contains unit tests for the application.
 
 ## Code explanation
-> [!NOTE] The description of API Controllers will be represented on the StudentController, because the TeacherController and the AssignmentController share the same or almost the same logic.
+> [!NOTE]
+> The description of API Controllers will be represented on the StudentController, because the TeacherController and the AssignmentController share the same or almost the same logic.
 
 Methods `GetAllStudents()`, `GetStudent()` and `DeleteStudent()` are self-explanatory.
 
