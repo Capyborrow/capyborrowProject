@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.11.35327.3
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "capyborrowProject", "capyborrowProject\capyborrowProject.csproj", "{1000379F-7D29-4020-8118-6CF564C8BF86}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "capyborrowProject", "capyborrowProject\capyborrowProject.csproj", "{1000379F-7D29-4020-8118-6CF564C8BF86}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestProject", "TestProject\TestProject.csproj", "{F5222A06-155A-45B3-94D9-7BF2528D9FFD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "capyborrowTest", "capyborrowTest\capyborrowTest.csproj", "{7FBA235E-4DFC-49A1-B03E-BF9068944CB7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +17,10 @@ Global
 		{1000379F-7D29-4020-8118-6CF564C8BF86}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1000379F-7D29-4020-8118-6CF564C8BF86}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1000379F-7D29-4020-8118-6CF564C8BF86}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F5222A06-155A-45B3-94D9-7BF2528D9FFD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F5222A06-155A-45B3-94D9-7BF2528D9FFD}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F5222A06-155A-45B3-94D9-7BF2528D9FFD}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F5222A06-155A-45B3-94D9-7BF2528D9FFD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7FBA235E-4DFC-49A1-B03E-BF9068944CB7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7FBA235E-4DFC-49A1-B03E-BF9068944CB7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7FBA235E-4DFC-49A1-B03E-BF9068944CB7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7FBA235E-4DFC-49A1-B03E-BF9068944CB7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
