@@ -99,6 +99,35 @@ namespace capyborrowTest.ControllersTests
             Assert.That(notFoundResult?.StatusCode, Is.EqualTo(404));
         }
 
+        [Test]
+        async public Task PostAssignment_ShouldReturnOk_WhenDataIsValid()
+        {
+            // Arrange
+            var controller = new AssignmentController(Context);
+            //should be put to datasource
+            Assignment assignment = new()
+            {
+                title = "Test Assignment",
+                teacher = new Teacher
+                {
+                    email = "teacher@example.com",
+                    firstName = "John",
+                    lastName = "Doe",
+                    passwordHash = "hashed_password"
+                }
+            };
+
+            // Act
+            var result = await controller.PostAssignment(assignment);
+
+            // Assert
+            Assert.That(result.Result, Is.InstanceOf<OkObjectResult>());
+
+            var okObjectResult = result.Result as OkObjectResult;
+            Assert.That(okObjectResult?.StatusCode, Is.EqualTo(200));
+
+        }
+
         //should be added to DataSource
         private void SeedDatabase()
         {
