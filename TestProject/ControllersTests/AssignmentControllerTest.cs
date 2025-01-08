@@ -1,6 +1,7 @@
 ﻿using capyborrowProject.Controllers;
 using capyborrowProject.Data;
 using capyborrowProject.Models;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -127,6 +128,41 @@ namespace capyborrowTest.ControllersTests
             Assert.That(okObjectResult?.StatusCode, Is.EqualTo(200));
 
         }
+
+        [Test]
+        async public Task DeleteAssignment_ShouldReturnNoContent_IndexInRange()
+        {
+            // Arrange
+            var controller = new AssignmentController(Context);
+
+            // Act
+            var result = await controller.DeleteAssignment(1);
+
+            // Assert
+            Assert.That(result, Is.InstanceOf<NoContentResult>());
+
+            var noContentResult = result as NoContentResult;
+            Assert.That(noContentResult?.StatusCode, Is.EqualTo(204));
+
+        }
+
+        [Test]
+        async public Task DeleteAssignment_ShouldReturnNotFound_IndexOutOfRange()
+        {
+            // Arrange
+            var controller = new AssignmentController(Context);
+
+            // Act
+            var result = await controller.DeleteAssignment(-1);
+
+            // Assert
+            Assert.That(result, Is.InstanceOf<NotFoundResult>());
+
+            var notFoundResult = result as NotFoundResult;
+            Assert.That(notFoundResult?.StatusCode, Is.EqualTo(404));
+
+        }
+
 
         //should be added to DataSource
         private void SeedDatabase()
