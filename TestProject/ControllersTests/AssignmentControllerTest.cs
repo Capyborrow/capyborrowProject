@@ -9,7 +9,8 @@ namespace capyborrowTest.ControllersTests
     [TestFixture]
     internal class AssignmentControllerTest
     {
-        public APIContext Context { get; private set; }
+        private APIContext Context { get; set; }
+
         [SetUp]
         public void SetUp()
         {
@@ -21,6 +22,7 @@ namespace capyborrowTest.ControllersTests
 
             SeedDatabase();
         }
+
         [TearDown]
         public void TearDown()
         {
@@ -52,6 +54,49 @@ namespace capyborrowTest.ControllersTests
             //should check if returned values are equal but with less hardcoding
             //Assert.That(returnedAssignments.Count, Is.EqualTo(2));
             //Assert.That("Assignment 1", Is.EqualTo(returnedAssignments[0].title));
+        }
+
+        [Test]
+        async public Task GetAssignment_ShouldReturnOk_WhenIndexInRange()
+        {
+            // Arrange
+            var controller = new AssignmentController(Context);
+
+            // Act
+            var result = await controller.GetAssignment(1);
+
+            // Assert
+
+            Assert.That(result.Result, Is.InstanceOf<OkObjectResult>());
+
+            var okResult = result.Result as OkObjectResult;
+            Assert.That(okResult, Is.Not.Null);
+            Assert.That(okResult.StatusCode, Is.EqualTo(200));
+
+
+            var returnedAssignment = okResult.Value as Assignment;
+            Assert.That(returnedAssignment, Is.Not.Null);
+
+            //should check if returned values are equal but with less hardcoding
+            //Assert.That(returnedAssignments.Count, Is.EqualTo(2));
+            Assert.That(returnedAssignment.title, Is.EqualTo("Assignment 1"));
+        }
+
+        [Test]
+        async public Task GetAssignment_ShouldReturnNotFound_WhenIndexOutOfRange()
+        {
+            // Arrange
+            var controller = new AssignmentController(Context);
+
+            // Act
+            var result = await controller.GetAssignment(-1);
+
+            // Assert
+
+            Assert.That(result.Result, Is.InstanceOf<NotFoundResult>());
+
+            var notFoundResult = result.Result as NotFoundResult;
+            Assert.That(notFoundResult?.StatusCode, Is.EqualTo(404));
         }
 
         //should be added to DataSource
