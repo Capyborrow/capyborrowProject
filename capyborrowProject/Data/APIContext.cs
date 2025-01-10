@@ -12,6 +12,9 @@ namespace capyborrowProject.Data
         public DbSet<Subject> Subjects { get; set; }
         public DbSet<Lesson> Lessons { get; set; }
         public DbSet<Assignment> Assignments { get; set; }
+        public DbSet<Attandance> Attendances { get; set; }
+        public DbSet<Grade> Grades { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
 
         public APIContext(DbContextOptions<APIContext> options) : base(options)
         {
@@ -39,6 +42,41 @@ namespace capyborrowProject.Data
                 .HasOne(s => s.Group)
                 .WithMany()
                 .HasForeignKey(s => s.GroupId);
+
+            modelBuilder.Entity<Assignment>()
+               .HasOne(a => a.Lesson)
+               .WithMany()
+               .HasForeignKey(a => a.LessonId);
+
+            modelBuilder.Entity<Attandance>()
+               .HasOne(a => a.Lesson)
+               .WithMany()
+               .HasForeignKey(a => a.LessonId);
+
+            modelBuilder.Entity<Attandance>()
+               .HasOne(a => a.Student)
+               .WithMany()
+               .HasForeignKey(a => a.StudentId);
+
+            modelBuilder.Entity<Grade>()
+               .HasOne(g => g.Lesson)
+               .WithMany()
+               .HasForeignKey(g => g.LessonId);
+
+            modelBuilder.Entity<Grade>()
+               .HasOne(g => g.Student)
+               .WithMany()
+               .HasForeignKey(g => g.StudentId);
+
+            modelBuilder.Entity<Notification>()
+               .HasOne(n => n.Lesson)
+               .WithMany()
+               .HasForeignKey(n => n.LessonId);
+
+            modelBuilder.Entity<Notification>()
+               .HasOne(n => n.Teacher)
+               .WithMany()
+               .HasForeignKey(n => n.TeacherId);
         }
     }
 }
