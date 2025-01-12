@@ -22,8 +22,7 @@
         public required DateTime Date { get; set; }
         public required LessonType Type { get; set; }
         public required LessonImportance Importance { get; set; }
-        // public required ICollection<Attandance> Attandances { get; set; }
-
+        public required ICollection<Attendance> Attendances { get; set; }
 
         public required Subject Subject { get; set; }
         public required Group Group { get; set; }
