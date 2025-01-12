@@ -8,26 +8,26 @@ namespace capyborrowProject.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class AssignmentController : ControllerBase
+    public class AssignmentController(APIContext context) : ControllerBase
     {
-        private readonly APIContext _context; 
-
-        public AssignmentController(APIContext context)
-        {
-            _context = context;
-        }
-
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Assignment>>> GetAllAssignments()
         {
-            var assignments = await _context.Assignments.ToListAsync();
+            var assignments = await context.Assignments
+                .Include(a => a.Students)
+                .Include(a => a.Lesson)
+                .ToListAsync();
+
             return Ok(assignments);
         }
 
         [HttpGet("{id}")]
         public async Task<ActionResult<IEnumerable<Assignment>>> GetAssignment(int id)
         {
-            var assignment = await _context.Assignments.FindAsync(id);
+            var assignment = await context.Assignments
+                .Include(a => a.Students)
+                .Include(a => a.Lesson)
+                .FirstOrDefaultAsync(a => a.Id == id);
 
             if (assignment is null)
             {
@@ -38,12 +38,12 @@ namespace capyborrowProject.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Assignment>> PostAssignment(Assignment assignment)
+        public async Task<ActionResult<Assignment>> PostAssignment(Assignment assignmentToAdd)
         {
-            _context.Assignments.Add(assignment);
-            await _context.SaveChangesAsync();
+            context.Assignments.Add(assignmentToAdd);
+            await context.SaveChangesAsync();
 
-            return Ok(assignment);
+            return CreatedAtAction(nameof(GetAssignment), new { id = assignmentToAdd.Id }, assignmentToAdd);
         }
 
         [HttpPut("{id}")]
@@ -54,15 +54,15 @@ namespace capyborrowProject.Controllers
                 return BadRequest();
             }
 
-            _context.Entry(assignment).State = EntityState.Modified;
+            context.Entry(assignment).State = EntityState.Modified;
 
             try
             {
-                await _context.SaveChangesAsync();
+                await context.SaveChangesAsync();
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!_context.Assignments.Any(e => e.Id == id))
+                if (!context.Assignments.Any(a => a.Id == id))
                 {
                     return NotFound();
                 }
@@ -78,15 +78,18 @@ namespace capyborrowProject.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAssignment(int id)
         {
-            var assignment = await _context.Assignments.FindAsync(id);
+            var assignment = await context.Assignments
+                .Include(a => a.Students)
+                .Include(a => a.Lesson)
+                .FirstOrDefaultAsync(a => a.Id == id);
 
             if (assignment is null)
             {
                 return NotFound();
             }
 
-            _context.Assignments.Remove(assignment);
-            await _context.SaveChangesAsync();
+            context.Assignments.Remove(assignment);
+            await context.SaveChangesAsync();
 
             return NoContent();
         }
