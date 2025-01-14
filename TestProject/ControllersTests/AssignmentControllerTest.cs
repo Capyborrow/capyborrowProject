@@ -80,7 +80,7 @@ namespace capyborrowTest.ControllersTests
 
             //should check if returned values are equal but with less hardcoding
             //Assert.That(returnedAssignments.Count, Is.EqualTo(2));
-            Assert.That(returnedAssignment.title, Is.EqualTo("Assignment 1"));
+            Assert.That(returnedAssignment.Title, Is.EqualTo("Assignment 1"));
         }
 
         [Test]
@@ -108,14 +108,37 @@ namespace capyborrowTest.ControllersTests
             //should be put to datasource
             Assignment assignment = new()
             {
-                title = "Test Assignment",
-                teacher = new Teacher
+                Title = "Test Assignment",
+                Status = Assignment.TaskStatus.ToDo,
+                DateAssigned = DateTime.UtcNow,
+                Lesson = new()
                 {
-                    email = "teacher@example.com",
-                    firstName = "John",
-                    lastName = "Doe",
-                    passwordHash = "hashed_password"
-                }
+                    Attendances = new List<Attendance>(),
+                    Date = DateTime.UtcNow,
+                    Group = new()
+                    {
+                        Name = "",
+                        Students = [],
+                    },
+                    Importance = Lesson.LessonImportance.Test,
+                    Location = "",
+                    Subject = new()
+                    {
+                        Teacher = new()
+                        {
+                            Email = "",
+                            FirstName = "",
+                            LastName = "",
+                            Notifications = [],
+                            PasswordHash = "",
+                            Role = 1,
+                            Subjects = [],
+                        },
+                        Title = "",
+                    },
+                    Type = Lesson.LessonType.Lecture,
+                },
+                Students = [],
             };
 
             // Act
@@ -167,17 +190,77 @@ namespace capyborrowTest.ControllersTests
         //should be added to DataSource
         private void SeedDatabase()
         {
-            var teacher = new Teacher
-            {
-                email = "teacher@example.com",
-                firstName = "John",
-                lastName = "Doe",
-                passwordHash = "hashed_password"
-            };
+
 
             Context.Assignments.AddRange(
-                new Assignment { Id = 1, title = "Assignment 1", teacher = teacher },
-                new Assignment { Id = 2, title = "Assignment 2", teacher = teacher }
+                new Assignment
+                {
+                    Title = "Test Assignment 1",
+                    Status = Assignment.TaskStatus.ToDo,
+                    DateAssigned = DateTime.UtcNow,
+                    Lesson = new()
+                    {
+                        Attendances = new List<Attendance>(),
+                        Date = DateTime.UtcNow,
+                        Group = new()
+                        {
+                            Name = "",
+                            Students = [],
+                        },
+                        Importance = Lesson.LessonImportance.Test,
+                        Location = "",
+                        Subject = new()
+                        {
+                            Teacher = new()
+                            {
+                                Email = "",
+                                FirstName = "",
+                                LastName = "",
+                                Notifications = [],
+                                PasswordHash = "",
+                                Role = 1,
+                                Subjects = [],
+                            },
+                            Title = "",
+                        },
+                        Type = Lesson.LessonType.Lecture,
+                    },
+                    Students = [],
+                },
+                new Assignment
+                {
+                    Title = "Test Assignment 2",
+                    Status = Assignment.TaskStatus.ToDo,
+                    DateAssigned = DateTime.UtcNow,
+                    Lesson = new()
+                    {
+                        Attendances = new List<Attendance>(),
+                        Date = DateTime.UtcNow,
+                        Group = new()
+                        {
+                            Name = "",
+                            Students = [],
+                        },
+                        Importance = Lesson.LessonImportance.Test,
+                        Location = "",
+                        Subject = new()
+                        {
+                            Teacher = new()
+                            {
+                                Email = "",
+                                FirstName = "",
+                                LastName = "",
+                                Notifications = [],
+                                PasswordHash = "",
+                                Role = 1,
+                                Subjects = [],
+                            },
+                            Title = "",
+                        },
+                        Type = Lesson.LessonType.Lecture,
+                    },
+                    Students = [],
+                }
             );
 
             Context.SaveChanges();
