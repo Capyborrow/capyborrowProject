@@ -75,10 +75,10 @@ namespace capyborrowTest.ControllersTests
 
             var result = await controller.PostAssignment(assignment);
 
-            Assert.That(result.Result, Is.InstanceOf<OkObjectResult>());
-            var okResult = result.Result as OkObjectResult;
+            Assert.That(result.Result, Is.InstanceOf<CreatedAtActionResult>());
+            var okResult = result.Result as CreatedAtActionResult;
             Assert.That(okResult, Is.Not.Null);
-            Assert.That(okResult.StatusCode, Is.EqualTo(200));
+            Assert.That(okResult.StatusCode, Is.EqualTo(201));
             var createdAssignment = (Assignment)okResult.Value!;
             Assert.That(createdAssignment.Title, Is.EqualTo("Test Assignment"));
         }
