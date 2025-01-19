@@ -23,10 +23,10 @@ namespace capyborrowProject.Controllers
             _jwtService = jwtService;
         }
 
-        [HttpPost("signup")]
+        [HttpPost("register")]
         public async Task<IActionResult> SignUp(SignUp model)
         {
-            if (await _context.Users.AnyAsync(u => u.Email == model.Email))
+            if (await _context.User.AnyAsync(u => u.Email == model.Email))
                 return BadRequest("A user with this email already exists.");
 
             var passwordHash = PasswordHelper.HashPassword(model.Password);
@@ -43,7 +43,7 @@ namespace capyborrowProject.Controllers
                 RefreshTokenExpiry = DateTime.UtcNow
             };
 
-            _context.Users.Add(user);
+            _context.User.Add(user);
             await _context.SaveChangesAsync();
 
             return Ok(new { Message = "User registered successfully." });
@@ -52,7 +52,7 @@ namespace capyborrowProject.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login(Login model)
         {
-            var user = await _context.Users.SingleOrDefaultAsync(u => u.Email == model.Email);
+            var user = await _context.User.SingleOrDefaultAsync(u => u.Email == model.Email);
 
             if (user == null || !PasswordHelper.VerifyPassword(model.Password, user.PasswordHash))
                 return Unauthorized(new { Message = "Invalid email or password." });
@@ -74,7 +74,7 @@ namespace capyborrowProject.Controllers
         [HttpPost("refresh-token")]
         public async Task<IActionResult> RefreshToken(string refreshToken)
         {
-            var user = await _context.Users.SingleOrDefaultAsync(u => u.RefreshToken == refreshToken);
+            var user = await _context.User.SingleOrDefaultAsync(u => u.RefreshToken == refreshToken);
 
             if (user == null || user.RefreshTokenExpiry < DateTime.UtcNow)
                 return Unauthorized(new { Message = "Invalid or expired refresh token." });
@@ -96,7 +96,7 @@ namespace capyborrowProject.Controllers
         [HttpPost("logout")]
         public async Task<IActionResult> Logout(string refreshToken)
         {
-            var user = await _context.Users.SingleOrDefaultAsync(u => u.RefreshToken == refreshToken);
+            var user = await _context.User.SingleOrDefaultAsync(u => u.RefreshToken == refreshToken);
 
             if (user == null)
                 return NotFound(new { Message = "User not found." });

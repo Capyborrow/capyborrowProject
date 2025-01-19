@@ -10,7 +10,8 @@
         public required string Email { get; set; }
         public byte[]? ProfilePicture { get; set; }
         public required int Role { get; set; } // 0 - Student, 1 - Teacher
-        public string RefreshToken { get; set; }
-        public DateTime RefreshTokenExpiry { get; set; }
+        //public string RefreshToken { get; set; }
+        public string ? RefreshToken { get; set; }
+        public DateTime ? RefreshTokenExpiry { get; set; }
     }
 }

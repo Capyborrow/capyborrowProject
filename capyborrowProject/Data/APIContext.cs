@@ -6,7 +6,7 @@ namespace capyborrowProject.Data
     public class APIContext(DbContextOptions<APIContext> options) : DbContext(options)
     {
         //
-        public DbSet<User> Users { get; set; }
+        public DbSet<User> User { get; set; } //Users
         //
         public DbSet<Student> Students { get; set; }
         public DbSet<Teacher> Teachers { get; set; }
