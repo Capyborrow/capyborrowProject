@@ -56,7 +56,8 @@ namespace capyborrowProject.Controllers
                 Grades = studentToAdd.Grades,
                 Assignments = studentToAdd.Assignments,
                 Attendances = studentToAdd.Attendances,
-                Group = studentToAdd.Group
+                Group = studentToAdd.Group,
+                RefreshTokens = studentToAdd.RefreshTokens
             };
 
             context.Students.Add(student);

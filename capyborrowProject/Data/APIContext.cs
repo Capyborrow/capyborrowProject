@@ -7,6 +7,8 @@ namespace capyborrowProject.Data
     {
         //
         public DbSet<User> User { get; set; } //Users
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
+
         //
         public DbSet<Student> Students { get; set; }
         public DbSet<Teacher> Teachers { get; set; }

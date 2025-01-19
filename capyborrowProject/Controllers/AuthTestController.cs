@@ -12,19 +12,19 @@ namespace capyborrowProject.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class AuthController : ControllerBase
+    public class AuthTestController : ControllerBase
     {
         private readonly APIContext _context;
         private readonly JwtService _jwtService;
 
-        public AuthController(APIContext context, JwtService jwtService)
+        public AuthTestController(APIContext context, JwtService jwtService)
         {
             _context = context;
             _jwtService = jwtService;
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> SignUp(SignUp model)
+        public async Task<IActionResult> SignUp([FromBody] SignUp model)
         {
             if (await _context.User.AnyAsync(u => u.Email == model.Email))
                 return BadRequest("A user with this email already exists.");
@@ -50,12 +50,33 @@ namespace capyborrowProject.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login(Login model)
+        public async Task<IActionResult> Login([FromBody] Login model)
         {
             var user = await _context.User.SingleOrDefaultAsync(u => u.Email == model.Email);
 
+
             if (user == null || !PasswordHelper.VerifyPassword(model.Password, user.PasswordHash))
                 return Unauthorized(new { Message = "Invalid email or password." });
+
+
+
+            //var roles = foundUser.Roles ?? new List<string>();
+            //string accessToken = GenerateJwtToken(foundUser.Username, roles, _configuration["JWT:AccessTokenSecret"], TimeSpan.FromSeconds(30));
+            //string refreshToken = GenerateJwtToken(foundUser.Username, null, _configuration["JWT:RefreshTokenSecret"], TimeSpan.FromDays(1));
+
+            //// Update refresh token in users.json
+            //foundUser.RefreshToken = refreshToken;
+            //await SaveUsersAsync(users);
+
+            //Response.Cookies.Append("jwt", refreshToken, new CookieOptions
+            //{
+            //    HttpOnly = true,
+            //    SameSite = SameSiteMode.None,
+            //    Secure = true,
+            //    MaxAge = TimeSpan.FromDays(1)
+            //});
+
+            //return Ok(new { accessToken });
 
             var accessToken = _jwtService.GenerateAccessToken(user);
             var refreshToken = _jwtService.GenerateRefreshToken();
@@ -71,16 +92,16 @@ namespace capyborrowProject.Controllers
             });
         }
 
-        [HttpPost("refresh-token")]
-        public async Task<IActionResult> RefreshToken(string refreshToken)
+        [HttpPost("refresh")] //Separate refresh and access tokens refreshing method..
+        public async Task<IActionResult> RefreshToken([FromBody] string refreshToken)
         {
-            var user = await _context.User.SingleOrDefaultAsync(u => u.RefreshToken == refreshToken);
+            var user = await _context.User.SingleOrDefaultAsync(u => u.RefreshToken == refreshToken); //Maybe change to Email search
 
             if (user == null || user.RefreshTokenExpiry < DateTime.UtcNow)
                 return Unauthorized(new { Message = "Invalid or expired refresh token." });
 
             var newAccessToken = _jwtService.GenerateAccessToken(user);
-            var newRefreshToken = _jwtService.GenerateRefreshToken();
+            var newRefreshToken = _jwtService.GenerateRefreshToken(); //
 
             user.RefreshToken = newRefreshToken;
             user.RefreshTokenExpiry = DateTime.UtcNow.AddDays(7);
@@ -94,9 +115,10 @@ namespace capyborrowProject.Controllers
         }
 
         [HttpPost("logout")]
-        public async Task<IActionResult> Logout(string refreshToken)
+        public async Task<IActionResult> Logout([FromBody] Login model, string refreshToken)
         {
-            var user = await _context.User.SingleOrDefaultAsync(u => u.RefreshToken == refreshToken);
+
+            var user = await _context.User.SingleOrDefaultAsync(u => u.Email == model.Email); //Maybe change to Email search
 
             if (user == null)
                 return NotFound(new { Message = "User not found." });

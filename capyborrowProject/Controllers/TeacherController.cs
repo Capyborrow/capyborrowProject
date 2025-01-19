@@ -52,7 +52,8 @@ namespace capyborrowProject.Controllers
                 ProfilePicture = teacherToAdd.ProfilePicture,
                 Role = teacherToAdd.Role,
                 Subjects = teacherToAdd.Subjects,
-                Notifications = teacherToAdd.Notifications
+                Notifications = teacherToAdd.Notifications,
+                RefreshTokens = teacherToAdd.RefreshTokens
             };
 
             context.Teachers.Add(teacher);
