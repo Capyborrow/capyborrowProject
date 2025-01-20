@@ -9,26 +9,27 @@ namespace capyborrowProject.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class TeacherController : ControllerBase
+    public class TeacherController(APIContext context) : ControllerBase
     {
-        private readonly APIContext _context; 
-
-        public TeacherController(APIContext context)
-        {
-            _context = context;
-        }
-
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Teacher>>> GetAllTeachers()
         {
-            var teachers = await _context.Teachers.ToListAsync();
+            var teachers = await context.Teachers
+                .Include(t => t.Subjects)
+                .Include(t => t.Notifications)
+                .ToListAsync();
+
             return Ok(teachers);
         }
 
         [HttpGet("{id}")]
         public async Task<ActionResult<IEnumerable<Teacher>>> GetTeacher(int id)
         {
-            var teacher = await _context.Teachers.FindAsync(id);
+            var teacher = await context.Teachers
+                .Include(t => t.Subjects)
+                .Include(t => t.Notifications)
+                .Include(s => s.RefreshTokens)
+                .FirstOrDefaultAsync(t => t.Id == id);
 
             if (teacher is null)
             {
@@ -44,17 +45,22 @@ namespace capyborrowProject.Controllers
             var teacher = new Teacher
             {
                 Id = teacherToAdd.Id,
-                firstName = teacherToAdd.firstName,
-                middleName = teacherToAdd.middleName,
-                lastName = teacherToAdd.lastName,
-                passwordHash = PasswordHelper.HashPassword(teacherToAdd.passwordHash),
-                email = teacherToAdd.email,
+                FirstName = teacherToAdd.FirstName,
+                MiddleName = teacherToAdd.MiddleName,
+                LastName = teacherToAdd.LastName,
+                PasswordHash = PasswordHelper.HashPassword(teacherToAdd.PasswordHash),
+                Email = teacherToAdd.Email,
+                ProfilePicture = teacherToAdd.ProfilePicture,
+                Role = teacherToAdd.Role,
+                Subjects = teacherToAdd.Subjects,
+                Notifications = teacherToAdd.Notifications,
+                RefreshTokens = teacherToAdd.RefreshTokens
             };
 
-            _context.Teachers.Add(teacher);
-            await _context.SaveChangesAsync();
+            context.Teachers.Add(teacher);
+            await context.SaveChangesAsync();
 
-            return Ok(teacher);
+            return CreatedAtAction(nameof(GetTeacher), new { id = teacher.Id }, teacher);
         }
 
         [HttpPut("{id}")]
@@ -65,15 +71,15 @@ namespace capyborrowProject.Controllers
                 return BadRequest();
             }
 
-            _context.Entry(teacher).State = EntityState.Modified;
+            context.Entry(teacher).State = EntityState.Modified;
 
             try
             {
-                await _context.SaveChangesAsync();
+                await context.SaveChangesAsync();
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!_context.Teachers.Any(e => e.Id == id))
+                if (!context.Teachers.Any(e => e.Id == id))
                 {
                     return NotFound();
                 }
@@ -89,15 +95,19 @@ namespace capyborrowProject.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteTeacher(int id)
         {
-            var teacher = await _context.Teachers.FindAsync(id);
+            var teacher = await context.Teachers
+                .Include(t => t.Subjects)
+                .Include(t => t.Notifications)
+                .Include(s => s.RefreshTokens)
+                .FirstOrDefaultAsync(t => t.Id == id);
 
             if (teacher is null)
             {
                 return NotFound();
             }
 
-            _context.Teachers.Remove(teacher);
-            await _context.SaveChangesAsync();
+            context.Teachers.Remove(teacher);
+            await context.SaveChangesAsync();
 
             return NoContent();
         }
