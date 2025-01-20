@@ -22,26 +22,26 @@ namespace capyborrowProject.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> SignUp([FromBody] SignUp model)
+        public async Task<IActionResult> SignUp([FromBody] SignUpRequest request)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            if (await _context.Users.AnyAsync(u => u.Email == model.Email))
+            if (await _context.Users.AnyAsync(u => u.Email == request.Email))
                 return BadRequest("A user with this email already exists.");
 
-            var passwordHash = PasswordHelper.HashPassword(model.Password);
+            var passwordHash = PasswordHelper.HashPassword(request.Password);
 
             var user = new User
             {
-                FirstName = model.FirstName,
-                MiddleName = model.MiddleName,
-                LastName = model.LastName,
-                Email = model.Email,
+                FirstName = request.FirstName,
+                MiddleName = request.MiddleName,
+                LastName = request.LastName,
+                Email = request.Email,
                 PasswordHash = passwordHash,
-                Role = model.Role,
+                Role = request.Role,
                 RefreshTokens = new List<RefreshToken>()
             };
 
