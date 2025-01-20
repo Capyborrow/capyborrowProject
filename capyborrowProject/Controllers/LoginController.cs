@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace capyborrowProject.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/Auth/[controller]")]
     [ApiController]
     public class LoginController : ControllerBase
     {
@@ -21,7 +21,7 @@ namespace capyborrowProject.Controllers
             _jwtService = jwtService;
         }
 
-        [HttpPost("login")]
+        [HttpPost]
         public async Task<IActionResult> Login([FromBody] LoginRequest model) //, RefreshToken refresh
         {
             if (!ModelState.IsValid)
@@ -42,17 +42,17 @@ namespace capyborrowProject.Controllers
                 return Unauthorized();
             }
 
-            var accessToken = _jwtService.GenerateAccessToken(new {Email = user.Email, Role = user.Role});
-            var refreshToken = _jwtService.GenerateRefreshToken(new { Email = user.Email });
+            var accessToken = _jwtService.GenerateAccessToken(new {email = user.Email, role = user.Role});
+            var refreshToken = _jwtService.GenerateRefreshToken(new { email = user.Email });
             _context.RefreshTokens.Add(new RefreshToken { UserId = user.Id, Token = refreshToken});
             
             await _context.SaveChangesAsync();
 
             Response.Cookies.Append("jwt", refreshToken, new CookieOptions
             {
-                HttpOnly = true,
+                HttpOnly = false,
                 SameSite = SameSiteMode.Strict,
-                Secure = true,
+                Secure = false,
                 MaxAge = TimeSpan.FromDays(1)
             });
 

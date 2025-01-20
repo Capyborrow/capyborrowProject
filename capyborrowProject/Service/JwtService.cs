@@ -19,12 +19,12 @@ namespace capyborrowProject.Service
 
         public string GenerateAccessToken(object payload)
         {
-            return GenerateJwtToken(payload, _jwtSettings.AccessTokenSecret, TimeSpan.FromMinutes(_jwtSettings.AccessTokenExpiryInMinutes));
+            return GenerateJwtToken(payload, _jwtSettings.AccessTokenSecret, TimeSpan.FromSeconds(_jwtSettings.AccessTokenExpiryInSeconds));
         }
 
         public string GenerateRefreshToken(object payload)
         {
-            return GenerateJwtToken(payload, _jwtSettings.RefreshTokenSecret, TimeSpan.FromDays(_jwtSettings.RefreshTokenExpiryInDays));
+            return GenerateJwtToken(payload, _jwtSettings.RefreshTokenSecret, TimeSpan.FromSeconds(_jwtSettings.RefreshTokenExpiryInSeconds));
         }
 
         private string GenerateJwtToken(object payload, string secret, TimeSpan expiresIn)

@@ -28,7 +28,6 @@ namespace capyborrowProject.Controllers
             var teacher = await context.Teachers
                 .Include(t => t.Subjects)
                 .Include(t => t.Notifications)
-                .Include(s => s.RefreshTokens)
                 .FirstOrDefaultAsync(t => t.Id == id);
 
             if (teacher is null)
@@ -98,7 +97,6 @@ namespace capyborrowProject.Controllers
             var teacher = await context.Teachers
                 .Include(t => t.Subjects)
                 .Include(t => t.Notifications)
-                .Include(s => s.RefreshTokens)
                 .FirstOrDefaultAsync(t => t.Id == id);
 
             if (teacher is null)

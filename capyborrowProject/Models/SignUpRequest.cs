@@ -21,6 +21,6 @@ namespace capyborrowProject.Models
         public required string Password { get; set; }
 
         [Required(ErrorMessage = "Role is required.")]
-        public required int Role { get; set; }
+        public required string Role { get; set; }
     }
 }
