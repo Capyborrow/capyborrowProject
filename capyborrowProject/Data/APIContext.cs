@@ -5,11 +5,8 @@ namespace capyborrowProject.Data
 {
     public class APIContext(DbContextOptions<APIContext> options) : DbContext(options)
     {
-        //
-        public DbSet<User> User { get; set; } //Users
+        public DbSet<User> Users { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
-
-        //
         public DbSet<Student> Students { get; set; }
         public DbSet<Teacher> Teachers { get; set; }
         public DbSet<Group> Groups { get; set; }
@@ -25,6 +22,13 @@ namespace capyborrowProject.Data
             // Define relationships here
             modelBuilder.Entity<User>()
                 .UseTpcMappingStrategy();
+
+            modelBuilder.Entity<RefreshToken>()
+                .HasOne(rt => rt.User)
+                .WithMany(u => u.RefreshTokens)
+                .HasForeignKey(rt => rt.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
 
             // STUDENT RELATIONSHIPS
             modelBuilder.Entity<Student>()

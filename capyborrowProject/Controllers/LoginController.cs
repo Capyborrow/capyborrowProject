@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-
 namespace capyborrowProject.Controllers
 {
     [Route("api/[controller]")]
@@ -41,7 +40,7 @@ namespace capyborrowProject.Controllers
             bool isPasswordValid = PasswordHelper.VerifyPassword(model.Password, user.PasswordHash);
             if (!isPasswordValid)
             {
-                return Unauthorized(); // Invalid password
+                return Unauthorized();
             }
 
             var accessToken = _jwtService.GenerateAccessToken(new {Email = user.Email, Role = user.Role});

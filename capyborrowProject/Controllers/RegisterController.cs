@@ -41,7 +41,8 @@ namespace capyborrowProject.Controllers
                 LastName = model.LastName,
                 Email = model.Email,
                 PasswordHash = passwordHash,
-                Role = model.Role
+                Role = model.Role,
+                RefreshTokens = new List<RefreshToken>()
             };
 
             _context.Users.Add(user);
