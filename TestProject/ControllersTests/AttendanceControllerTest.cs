@@ -3,6 +3,7 @@ using capyborrowProject.Data;
 using capyborrowProject.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using TestProject.Utilities.Factories;
 
 namespace TestProject.ControllersTests
 {
@@ -156,53 +157,12 @@ namespace TestProject.ControllersTests
 
         private static Student CreateStudent()
         {
-            return new Student
-            {
-                GroupId = 1,
-                Course = 1,
-                Grades = [],
-                Assignments = [],
-                Attendances = [],
-                Group = new Group {Name = "Group 1", Students = [] },
-                FirstName = "",
-                Email = "",
-                LastName = "",
-                PasswordHash = "",
-                Role = 1,
-            };
+            return StudentFactory.CreateEmptyStudent();
         }
 
         private static Lesson CreateLesson()
         {
-            return new Lesson
-            {
-                SubjectId = 1,
-                GroupId = 1,
-                Location = "",
-                Date = DateTime.UtcNow,
-                Type = Lesson.LessonType.Lecture,
-                Importance = Lesson.LessonImportance.Usual,
-                Attendances = [],
-                Subject = new Subject
-                {
-                    Title = "Test Subject",
-                    Teacher = new Teacher
-                    {
-                        FirstName = "",
-                        LastName = "",
-                        Email = "",
-                        PasswordHash = "",
-                        Role = 1,
-                        Subjects = [],
-                        Notifications = []
-                    }
-                },
-                Group = new Group
-                {
-                    Name = "Group 1",
-                    Students = []
-                }
-            };
+            return LessonFactory.CreateEmptyLesson();
         }
     }
 

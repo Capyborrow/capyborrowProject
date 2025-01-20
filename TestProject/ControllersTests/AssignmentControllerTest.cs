@@ -4,8 +4,9 @@ using capyborrowProject.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NUnit.Framework;
+using TestProject.Utilities.Factories;
 
-namespace capyborrowTest.ControllersTests
+namespace TestProject.ControllersTests
 {
     [TestFixture]
     internal class AssignmentControllerTest
@@ -133,28 +134,6 @@ namespace capyborrowTest.ControllersTests
             Students = []
         };
 
-        private static Lesson CreateLesson() => new()
-        {
-            Attendances = [],
-            Date = DateTime.UtcNow,
-            Group = new Group { Name = "", Students = [] },
-            Importance = Lesson.LessonImportance.Test,
-            Location = "",
-            Subject = new Subject
-            {
-                Teacher = new Teacher
-                {
-                    Email = "",
-                    FirstName = "",
-                    LastName = "",
-                    Notifications = [],
-                    PasswordHash = "",
-                    Role = 1,
-                    Subjects = []
-                },
-                Title = ""
-            },
-            Type = Lesson.LessonType.Lecture
-        };
+        private static Lesson CreateLesson() => LessonFactory.CreateEmptyLesson();
     }
 }
