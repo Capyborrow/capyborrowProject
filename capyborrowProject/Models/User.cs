@@ -11,8 +11,5 @@
         public byte[]? ProfilePicture { get; set; }
         public required int Role { get; set; } // 0 - Student, 1 - Teacher
         public required ICollection<RefreshToken> RefreshTokens { get; set; }
-
-        //public string ? RefreshToken { get; set; }
-        //public DateTime ? RefreshTokenExpiry { get; set; }
     }
 }

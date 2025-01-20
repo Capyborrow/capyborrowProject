@@ -28,86 +28,67 @@ namespace capyborrowProject.Service
         }
 
         private string GenerateJwtToken(object payload, string secret, TimeSpan expiresIn)
-    {
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
-        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-        var claims = payload.GetType()
-            .GetProperties()
-            .Select(p => new Claim(p.Name, p.GetValue(payload)?.ToString() ?? string.Empty))
-            .ToList();
-
-        var tokenDescriptor = new SecurityTokenDescriptor
         {
-            Subject = new ClaimsIdentity(claims),
-            Expires = DateTime.UtcNow.Add(expiresIn),
-            Issuer = _jwtSettings.Issuer,
-            Audience = _jwtSettings.Audience,
-            SigningCredentials = credentials,
-        };
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
+            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var token = tokenHandler.CreateToken(tokenDescriptor);
+            var claims = payload.GetType()
+                .GetProperties()
+                .Select(p => new Claim(p.Name, p.GetValue(payload)?.ToString() ?? string.Empty))
+                .ToList();
 
-        return tokenHandler.WriteToken(token);
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(claims),
+                Expires = DateTime.UtcNow.Add(expiresIn),
+                Issuer = _jwtSettings.Issuer,
+                Audience = _jwtSettings.Audience,
+                SigningCredentials = credentials,
+            };
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+
+            return tokenHandler.WriteToken(token);
+        }
+
+        public ClaimsPrincipal? ValidateAccessToken(string token)
+        {
+            return ValidateJwtToken(token, _jwtSettings.AccessTokenSecret);
+        }
+
+        public ClaimsPrincipal? ValidateRefreshToken(string token)
+        {
+            return ValidateJwtToken(token, _jwtSettings.RefreshTokenSecret);
+        }
+
+        private ClaimsPrincipal? ValidateJwtToken(string token, string secret)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.UTF8.GetBytes(secret);
+
+            try
+            {
+                var parameters = new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(key),
+                    ValidateIssuer = true,
+                    ValidIssuer = _jwtSettings.Issuer,
+                    ValidateAudience = true,
+                    ValidAudience = _jwtSettings.Audience,
+                    ClockSkew = TimeSpan.Zero
+                };
+
+                var principal = tokenHandler.ValidateToken(token, parameters, out _);
+                return principal;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+
     }
-
-
-
-
-
-
-
-
-
-
-        //public string GenerateToken(User user)
-        //{
-        //    var claims = new List<Claim>
-        //    {
-        //    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-        //    new Claim(ClaimTypes.Email, user.Email),
-        //    new Claim(ClaimTypes.Role, user.Role.ToString()),
-        //    };
-
-        //    var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Secret));
-        //    var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-        //    var token = new JwtSecurityToken(
-        //        issuer: _jwtSettings.Issuer,
-        //        audience: _jwtSettings.Audience,
-        //        claims: claims,
-        //        expires: DateTime.UtcNow.AddMinutes(_jwtSettings.TokenExpiryInMinutes),
-        //        signingCredentials: credentials);
-
-        //    return new JwtSecurityTokenHandler().WriteToken(token);
-        //}
-
-        //public string GenerateJwtToken(object payload, string secret)
-        //{
-        //    var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
-        //    var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-        //    var tokenDescriptor = new SecurityTokenDescriptor
-        //    {
-        //        Subject = new ClaimsIdentity(payload.GetType().GetProperties().Select(p => new Claim(p.Name, p.GetValue(payload)?.ToString()))),
-        //        //Expires = DateTime.UtcNow.Add(expiresIn),
-        //        Expires = DateTime.UtcNow.AddMinutes(_jwtSettings.TokenExpiryInMinutes),
-
-        //        SigningCredentials = credentials
-        //    };
-
-        //    var tokenHandler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
-        //    var token = tokenHandler.CreateToken(tokenDescriptor);
-
-        //    return tokenHandler.WriteToken(token);
-        //}
-
-
-        //public string GenerateRefreshToken()
-        //{
-        //    return Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));  //??
-        //}
-    }
-
 }

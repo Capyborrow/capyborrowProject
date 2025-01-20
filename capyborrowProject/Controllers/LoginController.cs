@@ -22,7 +22,7 @@ namespace capyborrowProject.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] Login model) //, RefreshToken refresh
+        public async Task<IActionResult> Login([FromBody] LoginRequest model) //, RefreshToken refresh
         {
             if (!ModelState.IsValid)
             {
@@ -35,7 +35,6 @@ namespace capyborrowProject.Controllers
             {
                 return BadRequest(ModelState);
             }
-            //var token = await _context.RefreshTokens.SingleOrDefaultAsync(rt => rt.UserId == user.Id); //?
             
             bool isPasswordValid = PasswordHelper.VerifyPassword(model.Password, user.PasswordHash);
             if (!isPasswordValid)
@@ -52,7 +51,7 @@ namespace capyborrowProject.Controllers
             Response.Cookies.Append("jwt", refreshToken, new CookieOptions
             {
                 HttpOnly = true,
-                SameSite = SameSiteMode.None,
+                SameSite = SameSiteMode.Strict,
                 Secure = true,
                 MaxAge = TimeSpan.FromDays(1)
             });

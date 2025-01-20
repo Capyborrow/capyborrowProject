@@ -9,8 +9,6 @@
         //public DateTime ExpiryDate { get; set; }
         //public DateTime CreatedDate { get; set; }
         //public DateTime? RevokedDate { get; set; }
-
-        // Navigation property
         public User User { get; set; }
     }
 }
