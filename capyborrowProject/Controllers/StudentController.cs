@@ -28,7 +28,6 @@ namespace capyborrowProject.Controllers
             var student = await context.Students
                 .Include(s => s.Group)
                 .Include(s => s.Grades)
-                .Include(s => s.RefreshTokens)
                 .FirstOrDefaultAsync(s => s.Id == id);
 
             if (student is null)
@@ -102,7 +101,6 @@ namespace capyborrowProject.Controllers
             var student = await context.Students
                 .Include(s => s.Group)
                 .Include(s => s.Grades)
-                .Include(s => s.RefreshTokens)
                 .FirstOrDefaultAsync(s => s.Id == id);
 
             if (student is null)

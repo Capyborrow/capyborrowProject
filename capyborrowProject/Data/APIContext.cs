@@ -21,7 +21,7 @@ namespace capyborrowProject.Data
         {
             // Define relationships here
             modelBuilder.Entity<User>()
-                .UseTpcMappingStrategy();
+                .UseTphMappingStrategy();
 
             modelBuilder.Entity<RefreshToken>()
                 .HasOne(rt => rt.User)

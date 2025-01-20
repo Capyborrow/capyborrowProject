@@ -7,19 +7,19 @@ using Microsoft.EntityFrameworkCore;
 
 namespace capyborrowProject.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/Auth/[controller]")]
     [ApiController]
-    public class RefreshTokenController : ControllerBase
+    public class RefreshController : ControllerBase
     {
         private readonly APIContext _context;
         private readonly JwtService _jwtService;
-        public RefreshTokenController(APIContext context, JwtService jwtService)
+        public RefreshController(APIContext context, JwtService jwtService)
         {
             _context = context;
             _jwtService = jwtService;
         }
 
-        [HttpPost("refresh")]
+        [HttpPost]
         public async Task<IActionResult> Refresh()
         {
             var refreshToken = Request.Cookies["jwt"];

@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace capyborrowProject.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/Auth/[controller]")]
     [ApiController]
     public class RegisterController : ControllerBase
     {
@@ -21,13 +21,13 @@ namespace capyborrowProject.Controllers
             _jwtService = jwtService;
         }
 
-        [HttpPost("register")]
+        [HttpPost]
         public async Task<IActionResult> SignUp([FromBody] SignUpRequest request)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
+            //if (!ModelState.IsValid)
+            //{
+            //    return BadRequest(ModelState);
+            //}
 
             if (await _context.Users.AnyAsync(u => u.Email == request.Email))
                 return BadRequest("A user with this email already exists.");
