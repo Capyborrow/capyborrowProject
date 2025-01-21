@@ -4,6 +4,8 @@ using capyborrowProject.Service;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Diagnostics;
+using System.Security.Claims;
 
 namespace capyborrowProject.Controllers
 {
@@ -34,29 +36,34 @@ namespace capyborrowProject.Controllers
 
             if (user is null)
             {
-                return Forbid("Invalid refresh token.");
+                return Forbid("Bearer");
             }
 
             var claimsPrincipal = _jwtService.ValidateRefreshToken(refreshToken);
-            if (claimsPrincipal == null || claimsPrincipal.FindFirst("Email")?.Value != user.Email)
+            if (claimsPrincipal == null || claimsPrincipal.FindFirst(ClaimTypes.Email)?.Value != user.Email)
             {
-                return Forbid("Invalid refresh token.");
+                return Forbid("Bearer");
             }
 
             var accessToken = _jwtService.GenerateAccessToken(new
             {
-                Email = user.Email,
-                Role = user.Role
+                email = user.Email,
+                role = user.Role
             });
 
-            // Optionally update or invalidate old refresh tokens (best practice)
-            // e.g., you could rotate the refresh token here:
-            // var newRefreshToken = _jwtService.GenerateRefreshToken(new { Email = user.Email });
-            // var existingToken = user.RefreshTokens.FirstOrDefault(rt => rt.Token == refreshToken);
-            // if (existingToken != null) existingToken.Token = newRefreshToken;
+            var newRefreshToken = _jwtService.GenerateRefreshToken(new { email = user.Email });
+            var existingToken = user.RefreshTokens.FirstOrDefault(rt => rt.Token == refreshToken);
+            if (existingToken != null) existingToken.Token = newRefreshToken;
 
-            // Save changes (if you rotate tokens)
-            // await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync();
+
+            Response.Cookies.Append("jwt", newRefreshToken, new CookieOptions
+            {
+                HttpOnly = false,
+                SameSite = SameSiteMode.Strict,
+                Secure = false,
+                MaxAge = TimeSpan.FromDays(1)
+            });
 
             return Ok(new { AccessToken = accessToken });
         }
