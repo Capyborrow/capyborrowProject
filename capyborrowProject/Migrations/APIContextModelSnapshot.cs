@@ -264,11 +264,6 @@ namespace capyborrowProject.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Discriminator")
-                        .IsRequired()
-                        .HasMaxLength(8)
-                        .HasColumnType("nvarchar(8)");
-
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -299,31 +294,29 @@ namespace capyborrowProject.Migrations
 
                     b.ToTable("Users");
 
-                    b.HasDiscriminator().HasValue("User");
-
-                    b.UseTphMappingStrategy();
+                    b.UseTptMappingStrategy();
                 });
 
             modelBuilder.Entity("capyborrowProject.Models.Student", b =>
                 {
                     b.HasBaseType("capyborrowProject.Models.User");
 
-                    b.Property<int>("Course")
+                    b.Property<int?>("Course")
                         .HasColumnType("int");
 
-                    b.Property<int>("GroupId")
+                    b.Property<int?>("GroupId")
                         .HasColumnType("int");
 
                     b.HasIndex("GroupId");
 
-                    b.HasDiscriminator().HasValue("Student");
+                    b.ToTable("Students");
                 });
 
             modelBuilder.Entity("capyborrowProject.Models.Teacher", b =>
                 {
                     b.HasBaseType("capyborrowProject.Models.User");
 
-                    b.HasDiscriminator().HasValue("Teacher");
+                    b.ToTable("Teachers");
                 });
 
             modelBuilder.Entity("AssignmentStudent", b =>
@@ -455,10 +448,24 @@ namespace capyborrowProject.Migrations
                     b.HasOne("capyborrowProject.Models.Group", "Group")
                         .WithMany("Students")
                         .HasForeignKey("GroupId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("capyborrowProject.Models.User", null)
+                        .WithOne()
+                        .HasForeignKey("capyborrowProject.Models.Student", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Group");
+                });
+
+            modelBuilder.Entity("capyborrowProject.Models.Teacher", b =>
+                {
+                    b.HasOne("capyborrowProject.Models.User", null)
+                        .WithOne()
+                        .HasForeignKey("capyborrowProject.Models.Teacher", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("capyborrowProject.Models.Group", b =>

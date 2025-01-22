@@ -2,7 +2,7 @@
 {
     public class Teacher : User
     {
-        public required ICollection<Subject> Subjects { get; set; }
-        public required ICollection<Notification> Notifications { get; set; }
+        public ICollection<Subject> Subjects { get; set; } = new List<Subject>();
+        public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
     }
 }

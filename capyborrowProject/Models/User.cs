@@ -10,6 +10,6 @@
         public required string Email { get; set; }
         public byte[]? ProfilePicture { get; set; }
         public required string Role { get; set; }
-        public required ICollection<RefreshToken> RefreshTokens { get; set; }
+        public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
     }
 }
