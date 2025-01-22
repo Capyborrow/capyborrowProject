@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using capyborrowProject.Helpers;
+using Microsoft.AspNetCore.Authorization;
 
 namespace capyborrowProject.Controllers
 {
@@ -11,6 +12,7 @@ namespace capyborrowProject.Controllers
     [ApiController]
     public class StudentController(APIContext context) : ControllerBase
     {
+        [Authorize(Roles ="student")]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Student>>> GetAllStudents()
         {

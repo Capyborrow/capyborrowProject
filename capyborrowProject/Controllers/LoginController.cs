@@ -6,6 +6,7 @@ using capyborrowProject.Service;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace capyborrowProject.Controllers
 {
@@ -42,8 +43,8 @@ namespace capyborrowProject.Controllers
                 return Unauthorized();
             }
 
-            var accessToken = _jwtService.GenerateAccessToken(new {email = user.Email, role = user.Role});
-            var refreshToken = _jwtService.GenerateRefreshToken(new { email = user.Email });
+            var accessToken = _jwtService.GenerateAccessToken(new List<Claim> { new Claim(ClaimTypes.Email, user.Email), new Claim(ClaimTypes.Role, user.Role) });
+            var refreshToken = _jwtService.GenerateRefreshToken(new List<Claim> { new Claim(ClaimTypes.Email, user.Email) });
             _context.RefreshTokens.Add(new RefreshToken { UserId = user.Id, Token = refreshToken});
             
             await _context.SaveChangesAsync();

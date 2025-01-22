@@ -22,9 +22,14 @@ namespace capyborrowProject.Service
             return GenerateJwtToken(payload, _jwtSettings.AccessTokenSecret, TimeSpan.FromSeconds(_jwtSettings.AccessTokenExpiryInSeconds));
         }
 
-        public string GenerateRefreshToken(object payload)
+        public string GenerateAccessToken(IEnumerable<Claim> claims)
         {
-            return GenerateJwtToken(payload, _jwtSettings.RefreshTokenSecret, TimeSpan.FromSeconds(_jwtSettings.RefreshTokenExpiryInSeconds));
+            return GenerateJwtToken(claims, _jwtSettings.AccessTokenSecret, TimeSpan.FromSeconds(_jwtSettings.AccessTokenExpiryInSeconds));
+        }
+
+        public string GenerateRefreshToken(IEnumerable<Claim> claims)
+        {
+            return GenerateJwtToken(claims, _jwtSettings.RefreshTokenSecret, TimeSpan.FromSeconds(_jwtSettings.RefreshTokenExpiryInSeconds));
         }
 
         private string GenerateJwtToken(object payload, string secret, TimeSpan expiresIn)
@@ -36,6 +41,26 @@ namespace capyborrowProject.Service
                 .GetProperties()
                 .Select(p => new Claim(p.Name, p.GetValue(payload)?.ToString() ?? string.Empty))
                 .ToList();
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(claims),
+                Expires = DateTime.UtcNow.Add(expiresIn),
+                Issuer = _jwtSettings.Issuer,
+                Audience = _jwtSettings.Audience,
+                SigningCredentials = credentials,
+            };
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+
+            return tokenHandler.WriteToken(token);
+        }
+
+        private string GenerateJwtToken(IEnumerable<Claim> claims, string secret, TimeSpan expiresIn)
+        {
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
+            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {

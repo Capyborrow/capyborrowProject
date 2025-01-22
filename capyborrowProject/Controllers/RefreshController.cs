@@ -45,13 +45,9 @@ namespace capyborrowProject.Controllers
                 return Forbid("Bearer");
             }
 
-            var accessToken = _jwtService.GenerateAccessToken(new
-            {
-                email = user.Email,
-                role = user.Role
-            });
+            var accessToken = _jwtService.GenerateAccessToken(new List<Claim> { new Claim(ClaimTypes.Email, user.Email), new Claim(ClaimTypes.Role, user.Role) });
 
-            var newRefreshToken = _jwtService.GenerateRefreshToken(new { email = user.Email });
+            var newRefreshToken = _jwtService.GenerateRefreshToken(new List<Claim> { new Claim(ClaimTypes.Email, user.Email) });
             var existingToken = user.RefreshTokens.FirstOrDefault(rt => rt.Token == refreshToken);
             if (existingToken != null) existingToken.Token = newRefreshToken;
 
