@@ -24,28 +24,50 @@ namespace capyborrowProject.Controllers
         [HttpPost]
         public async Task<IActionResult> SignUp([FromBody] SignUpRequest request)
         {
-            //if (!ModelState.IsValid)
-            //{
-            //    return BadRequest(ModelState);
-            //}
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
 
             if (await _context.Users.AnyAsync(u => u.Email == request.Email))
                 return BadRequest("A user with this email already exists.");
 
             var passwordHash = PasswordHelper.HashPassword(request.Password);
 
-            var user = new User
+            if (request.Role == "student")
             {
-                FirstName = request.FirstName,
-                MiddleName = request.MiddleName,
-                LastName = request.LastName,
-                Email = request.Email,
-                PasswordHash = passwordHash,
-                Role = request.Role,
-                RefreshTokens = new List<RefreshToken>()
-            };
+                var user = new Student
+                {
+                    FirstName = request.FirstName,
+                    MiddleName = request.MiddleName,
+                    LastName = request.LastName,
+                    Email = request.Email,
+                    PasswordHash = passwordHash,
+                    Role = request.Role,
+                    RefreshTokens = new List<RefreshToken>(),
+                };
 
-            _context.Users.Add(user);
+                _context.Users.Add(user);
+            } else if (request.Role == "teacher")
+            {
+                var user = new Teacher
+                {
+                    FirstName = request.FirstName,
+                    MiddleName = request.MiddleName,
+                    LastName = request.LastName,
+                    Email = request.Email,
+                    PasswordHash = passwordHash,
+                    Role = request.Role,
+                    RefreshTokens = new List<RefreshToken>()
+                };
+
+                _context.Users.Add(user);
+            }
+            else
+            {
+                return BadRequest("Invalid role.");
+            }
+
             await _context.SaveChangesAsync();
 
             return Created("", new { Message = "User registered successfully." });
