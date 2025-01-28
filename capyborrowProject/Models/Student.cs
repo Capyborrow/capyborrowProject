@@ -1,6 +1,6 @@
 ﻿namespace capyborrowProject.Models
 {
-    public class Student : User
+    public class Student : ApplicationUser
     {
         public int? GroupId { get; set; }
         public int? Course { get; set; }

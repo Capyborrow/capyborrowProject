@@ -3,7 +3,7 @@
     public class Grade
     {
         public int Id { get; set; }
-        public int StudentId { get; set; }
+        public string StudentId { get; set; }
         public int LessonId { get; set; }
         public required double Score { get; set; }
         public string? Comment { get; set; }
