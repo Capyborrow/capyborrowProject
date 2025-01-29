@@ -21,12 +21,15 @@ namespace capyborrowProject.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly JwtService _jwtService;
-        public AuthController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, JwtService jwtService)
+        private readonly EmailService _emailService;
+        public AuthController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, JwtService jwtService, EmailService emailService)
         {
             _context = context;
             _userManager = userManager;
             _roleManager = roleManager;
             _jwtService = jwtService;
+            _emailService = emailService;
+
         }
 
         [Route("Register")]
@@ -94,7 +97,7 @@ namespace capyborrowProject.Controllers
 
         [Route("Login")]
         [HttpPost]
-        public async Task<IActionResult> Login([FromBody] LoginRequest request) //, RefreshToken refresh
+        public async Task<IActionResult> Login([FromBody] LoginRequest request) 
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -102,7 +105,7 @@ namespace capyborrowProject.Controllers
             var user = await _userManager.FindByEmailAsync(request.Email);
 
             if (user is null)
-                return BadRequest("User not authenticated"); 
+                return BadRequest("User not authenticated");
 
             if (!await _userManager.CheckPasswordAsync(user, request.Password))
                 return Unauthorized();
@@ -136,10 +139,10 @@ namespace capyborrowProject.Controllers
         public async Task<IActionResult> Refresh()
         {
             var refreshToken = Request.Cookies["jwt"];
-            
+
             if (string.IsNullOrEmpty(refreshToken))
                 return Unauthorized(new { Message = "Refresh token is missing or invalid." });
-            
+
             var foundToken = await _context.RefreshTokens
                 .Include(rt => rt.User)
                 .SingleOrDefaultAsync(rt => rt.Token == refreshToken);
@@ -153,19 +156,19 @@ namespace capyborrowProject.Controllers
                 return Forbid("Bearer");
 
             var claimsPrincipal = _jwtService.ValidateRefreshToken(refreshToken);
-            
+
             if (claimsPrincipal == null || claimsPrincipal.FindFirst(ClaimTypes.Email)?.Value != user.Email)
                 return Forbid("Bearer");
 
             var claims = _userManager.GetClaimsAsync(user).Result.ToList();
 
             var accessToken = _jwtService.GenerateAccessToken(claims);
-            
+
             var newRefreshToken = _jwtService.GenerateRefreshToken(claims/*new List<Claim> { new Claim(ClaimTypes.Email, user.Email) }*/);
-            
+
             var existingToken = user.RefreshTokens.FirstOrDefault(rt => rt.Token == refreshToken);
-            
-            if (existingToken != null) 
+
+            if (existingToken != null)
                 existingToken.Token = newRefreshToken;
 
             await _context.SaveChangesAsync();
@@ -205,5 +208,50 @@ namespace capyborrowProject.Controllers
 
             return Ok(new { Message = "User logged out successfully." });
         }
+
+        [Route("ForgotPassword")]
+        [HttpPost]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var user = await _userManager.FindByEmailAsync(request.Email);
+            if (user is null)
+                return BadRequest("User not found.");
+
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+            var resetLink = $"http://localhost:5174/reset_password?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(user.Email)}";
+
+            var subject = "Reset Your Password";
+            var body = $"Click <a href='{resetLink}'>here</a> to reset your password.";
+
+            await _emailService.SendEmailAsync(user.Email, subject, body);
+
+            return Ok(new { Message = "Password reset link sent to email." });
+        }
+
+
+        [Route("ResetPassword")]
+        [HttpPost]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var user = await _userManager.FindByEmailAsync(request.Email);
+            if (user is null)
+                return BadRequest("User not found.");
+
+            var result = await _userManager.ResetPasswordAsync(user, request.Token, request.NewPassword);
+
+            if (!result.Succeeded)
+                return BadRequest(result.Errors);
+
+            return Ok(new { Message = "Password reset successful." });
+        }
+
+
     }
 }

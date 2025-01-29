@@ -46,6 +46,9 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.LogoutPath = "/Auth/Logout"; // Custom logout path
 });
 
+builder.Services.AddSingleton<EmailService>();
+
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowSpecificOrigins", policy =>
