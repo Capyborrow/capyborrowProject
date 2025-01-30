@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Identity;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using System.Diagnostics;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace capyborrowProject.Controllers
 {
@@ -91,6 +92,14 @@ namespace capyborrowProject.Controllers
 
             await _userManager.AddClaimsAsync(user, claims);
 
+            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            var confirmationLink = $"http://localhost:5174/confirm_email/?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(user.Email)}";
+
+            var subject = "Confirm Your Email";
+            var body = $"Click <a href='{confirmationLink}'>here</a> to confirm your email.";
+
+            await _emailService.SendEmailAsync(user.Email, subject, body);
+
             return Created("", new { Message = "User registered successfully." });
 
         }
@@ -134,9 +143,9 @@ namespace capyborrowProject.Controllers
             });
         }
 
-        [Route("Refresh")]
+        [Route("RefreshAccessToken")]
         [HttpPost]
-        public async Task<IActionResult> Refresh()
+        public async Task<IActionResult> RefreshAccessToken()
         {
             var refreshToken = Request.Cookies["jwt"];
 
@@ -252,6 +261,53 @@ namespace capyborrowProject.Controllers
             return Ok(new { Message = "Password reset successful." });
         }
 
+        [Route("ResendConfirmationEmail")]
+        [HttpPost]
+        public async Task<IActionResult> ResendConfirmationEmail([FromBody] ResendEmailRequest request)
+        {
+            var user = await _userManager.FindByEmailAsync(request.Email);
+            if (user is null)
+                return BadRequest("Invalid request.");
 
+            if (await _userManager.IsEmailConfirmedAsync(user))
+            {
+                return BadRequest("Email already confirmed");
+            }
+
+            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            var confirmationLink = $"http://localhost:5174/confirm_email/?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(user.Email)}";
+  
+            var subject = "Confirm Your Email";
+            var body = $"Click <a href='{confirmationLink}'>here</a> to confirm your email.";
+
+            await _emailService.SendEmailAsync(user.Email, subject, body);
+
+            return Ok("Confirmation email resent.");
+        }
+
+
+        [Route("ConfirmEmail")]
+        [HttpPost]
+        public async Task<IActionResult> ConfirmEmail([FromBody] ConfirmEmailRequest request)
+        {
+            if (!ModelState.IsValid) {
+                return BadRequest(ModelState); 
+            }
+
+            var user = await _userManager.FindByEmailAsync(request.Email);
+            if (user is null)
+            {
+                return BadRequest("User not found.");
+            }
+
+            var result = await _userManager.ConfirmEmailAsync(user, request.Token);
+
+            if (!result.Succeeded)
+            {
+                return BadRequest(result.Errors);
+            }
+
+            return Ok(new { Message = "Email confirmed." });
+        }
     }
 }
