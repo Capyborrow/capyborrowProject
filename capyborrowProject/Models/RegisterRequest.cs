@@ -2,7 +2,7 @@
 
 namespace capyborrowProject.Models
 {
-    public class SignUpRequest
+    public class RegisterRequest
     {
         [Required(ErrorMessage = "FirstName is required.")]
         public required string FirstName { get; set; }

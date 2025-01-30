@@ -11,16 +11,16 @@ namespace TestProject.ControllersTests
     [TestFixture]
     internal class AssignmentControllerTest
     {
-        private APIContext Context { get; set; }
+        private ApplicationDbContext Context { get; set; }
 
         [SetUp]
         public void SetUp()
         {
-            var options = new DbContextOptionsBuilder<APIContext>()
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
                 .UseInMemoryDatabase("TestDatabase")
                 .Options;
 
-            Context = new APIContext(options);
+            Context = new ApplicationDbContext(options);
             SeedDatabase();
         }
 
