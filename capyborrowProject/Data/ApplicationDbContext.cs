@@ -1,27 +1,35 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using capyborrowProject.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using capyborrowProject.Models.PredefinedTables;
+using capyborrowProject.Models.JoinTables;
 
 namespace capyborrowProject.Data
 {
     public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : IdentityDbContext<ApplicationUser>(options)
     {
-       //public DbSet<ApplicationUser> Users { get; set; }
-       public DbSet<RefreshToken> RefreshTokens { get; set; }
-       // public DbSet<Student> Students { get; set; }
-       // public DbSet<Teacher> Teachers { get; set; }
-       // public DbSet<Group> Groups { get; set; }
-       // public DbSet<Subject> Subjects { get; set; }
-       // public DbSet<Lesson> Lessons { get; set; }
-       // public DbSet<Assignment> Assignments { get; set; }
-       // public DbSet<Attendance> Attendances { get; set; }
-       // public DbSet<Grade> Grades { get; set; }
-       // public DbSet<Notification> Notifications { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
+
+        public DbSet<Student> Students { get; set; }
+        public DbSet<Teacher> Teachers { get; set; }
+        public DbSet<Group> Groups { get; set; }
+        public DbSet<Subject> Subjects { get; set; }
+        public DbSet<Lesson> Lessons { get; set; }
+        public DbSet<Assignment> Assignments { get; set; }
+        public DbSet<Grade> Grades { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
+
+        public DbSet<LessonType> LessonTypes { get; set; } // Predefined table
+        public DbSet<AssignmentStatus> AssignmentStatuses { get; set; } // Predefined table
+
+        public DbSet<GroupSubject> GroupSubjects { get; set; } // Join table
+        public DbSet<TeacherSubject> TeacherSubjects { get; set; } // Join table
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-            // Define relationships here
+
             modelBuilder.Entity<ApplicationUser>()
                 .UseTphMappingStrategy();
 
@@ -31,122 +39,113 @@ namespace capyborrowProject.Data
                 .HasForeignKey(rt => rt.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            // Group-Subject (Many-to-Many)
+            modelBuilder.Entity<GroupSubject>().HasKey(gs => new { gs.GroupId, gs.SubjectId });
 
-            // STUDENT RELATIONSHIPS
-    //        modelBuilder.Entity<Student>()
-    //            .HasOne(s => s.Group)
-    //            .WithMany(g => g.Students)
-    //            .HasForeignKey(s => s.GroupId)
-    //            .OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<GroupSubject>()
+                .HasOne(gs => gs.Group)
+                .WithMany(g => g.GroupSubjects)
+                .HasForeignKey(gs => gs.GroupId);
 
-    //        modelBuilder.Entity<Student>()
-    //            .HasMany(s => s.Grades)
-    //            .WithOne(g => g.Student)
-    //            .HasForeignKey(g => g.StudentId)
-    //            .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<GroupSubject>()
+                .HasOne(gs => gs.Subject)
+                .WithMany(s => s.GroupSubjects)
+                .HasForeignKey(gs => gs.SubjectId);
 
-    //        modelBuilder.Entity<Student>()
-    //            .HasMany(s => s.Assignments)
-    //            .WithMany(a => a.Students)
-    //            .UsingEntity(j => j.ToTable("StudentAssignments"));
+            // Teacher-Subject (Many-to-Many)
+            modelBuilder.Entity<TeacherSubject>().HasKey(ts => new { ts.TeacherId, ts.SubjectId });
 
-    //        modelBuilder.Entity<Student>()
-    //            .HasMany(s => s.Attendances)
-    //            .WithOne(a => a.Student)
-    //            .HasForeignKey(a => a.StudentId)
-    //            .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<TeacherSubject>()
+                .HasOne(ts => ts.Teacher)
+                .WithMany(t => t.TeacherSubjects)
+                .HasForeignKey(ts => ts.TeacherId);
 
-    //        // TEACHER RELATIONSHIPS
-    //        modelBuilder.Entity<Teacher>()
-    //            .HasMany(t => t.Subjects)
-    //            .WithOne(s => s.Teacher)
-    //            .HasForeignKey(s => s.TeacherId)
-    //            .OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<TeacherSubject>()
+                .HasOne(ts => ts.Subject)
+                .WithMany(s => s.TeacherSubjects)
+                .HasForeignKey(ts => ts.SubjectId);
 
-    //        modelBuilder.Entity<Teacher>()
-    //            .HasMany(t => t.Notifications)
-    //            .WithOne(s => s.Teacher)
-    //            .HasForeignKey(s => s.TeacherId)
-    //            .OnDelete(DeleteBehavior.Cascade);
+            // Student-Group (One-to-Many)
+            modelBuilder.Entity<Student>()
+                .HasOne(s => s.Group)
+                .WithMany(g => g.Students)
+                .HasForeignKey(s => s.GroupId)
+                .OnDelete(DeleteBehavior.SetNull);
 
-    //        // GROUP RELATIONSHIPS
-    //        modelBuilder.Entity<Group>()
-    //            .HasMany(t => t.Students)
-    //            .WithOne(s => s.Group)
-    //            .HasForeignKey(s => s.GroupId)
-    //            .OnDelete(DeleteBehavior.Restrict);
+            // Grade-Student (One-to-Many)
+            modelBuilder.Entity<Grade>()
+                .HasOne(g => g.Student)
+                .WithMany(s => s.Grades)
+                .HasForeignKey(g => g.StudentId)
+                .OnDelete(DeleteBehavior.Cascade);
 
-    //        // SUBJECT RELATIONSHIPS
-    //        modelBuilder.Entity<Subject>()
-    //            .HasOne(t => t.Teacher)
-    //            .WithMany(t => t.Subjects)
-    //            .HasForeignKey(t => t.TeacherId)
-    //            .OnDelete(DeleteBehavior.NoAction);
+            // Grade-Assignment
+            modelBuilder.Entity<Grade>()
+                .HasOne(g => g.Assignment)
+                .WithMany()
+                .HasForeignKey(g => g.AssignmentId);
 
-    //        // LESSON RELATIONSHIPS
-    //        modelBuilder.Entity<Lesson>()
-    //            .HasOne(l => l.Group)
-    //            .WithMany()
-    //            .HasForeignKey(l => l.GroupId)
-    //            .OnDelete(DeleteBehavior.Restrict);
+            // Lesson-Group (Many-to-One)
+            modelBuilder.Entity<Lesson>()
+                .HasOne(l => l.Group)
+                .WithMany(g => g.Lessons)
+                .HasForeignKey(l => l.GroupId);
 
-    //        modelBuilder.Entity<Lesson>()
-    //            .HasOne(l => l.Subject)
-    //            .WithMany()
-    //            .HasForeignKey(l => l.SubjectId)
-    //            .OnDelete(DeleteBehavior.Restrict);
+            // Lesson-Subject
+            modelBuilder.Entity<Lesson>()
+                .HasOne(l => l.Subject)
+                .WithMany()
+                .HasForeignKey(l => l.SubjectId);
 
-    //        modelBuilder.Entity<Lesson>()
-    //            .HasMany(l => l.Attendances)
-    //            .WithOne(a => a.Lesson)
-    //            .HasForeignKey(a => a.LessonId)
-    //            .OnDelete(DeleteBehavior.Cascade);
+            // Lesson-LessonType
+            modelBuilder.Entity<Lesson>()
+                .HasOne(l => l.LessonType)
+                .WithMany()
+                .HasForeignKey(l => l.LessonTypeId);
 
-    //        // NOTIFICATION RELATIONSHIPS
-    //        modelBuilder.Entity<Notification>()
-    //           .HasOne(n => n.Lesson)
-    //           .WithMany()
-    //           .HasForeignKey(n => n.LessonId)
-    //           .OnDelete(DeleteBehavior.Cascade);
+            // Lesson-Teacher (Many-to-One)
+            modelBuilder.Entity<Lesson>()
+                .HasOne(l => l.Teacher)
+                .WithMany(t => t.Lessons)
+                .HasForeignKey(l => l.TeacherId);
 
-    //        modelBuilder.Entity<Notification>()
-    //           .HasOne(n => n.Teacher)
-    //           .WithMany(n => n.Notifications)
-    //           .HasForeignKey(n => n.TeacherId)
-    //           .OnDelete(DeleteBehavior.Cascade);
+            // Lesson-Notification (One-to-One)
+            modelBuilder.Entity<Lesson>()
+                .HasOne(l => l.Notification)
+                .WithOne(n => n.Lesson)
+                .HasForeignKey<Notification>(n => n.LessonId);
 
-    //        // ASSIGNMENT RELATIONSHIPS
-    //        modelBuilder.Entity<Assignment>()
-    //           .HasOne(t => t.Lesson)
-    //           .WithMany()
-    //           .HasForeignKey(t => t.LessonId)
-    //           .OnDelete(DeleteBehavior.Cascade);
+            // Assignment-Group (Many-to-One)
+            modelBuilder.Entity<Assignment>()
+                .HasOne(a => a.Group)
+                .WithMany(g => g.Assignments)
+                .HasForeignKey(a => a.GroupId);
 
-    //        // ATTENDANCE RELATIONSHIPS
-    //        modelBuilder.Entity<Attendance>()
-    //           .HasOne(a => a.Lesson)
-    //           .WithMany(b => b.Attendances)
-    //           .HasForeignKey(a => a.LessonId)
-    //           .OnDelete(DeleteBehavior.Cascade);
+            // Assignment-Lesson
+            modelBuilder.Entity<Assignment>()
+                .HasOne(a => a.Lesson)
+                .WithMany()
+                .HasForeignKey(a => a.LessonId)
+                .OnDelete(DeleteBehavior.Cascade);
 
-    //        modelBuilder.Entity<Attendance>()
-    //           .HasOne(a => a.Student)
-    //           .WithMany(b => b.Attendances)
-    //           .HasForeignKey(a => a.StudentId)
-    //           .OnDelete(DeleteBehavior.Cascade);
+            // Assignment-AssignmentStatus
+            modelBuilder.Entity<Assignment>()
+                .HasOne(a => a.AssignmentStatus)
+                .WithMany()
+                .HasForeignKey(a => a.AssignmentStatusId);
 
-    //        // GRADE RELATIONSHIPS
-    //        modelBuilder.Entity<Grade>()
-    //           .HasOne(t => t.Lesson)
-    //           .WithMany()
-    //           .HasForeignKey(s => s.LessonId)
-    //           .OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<LessonType>().HasData(
+                new LessonType { Id = 1, Name = "Lecture" },
+                new LessonType { Id = 2, Name = "Lab" },
+                new LessonType { Id = 3, Name = "Seminar" }
+            );
 
-    //        modelBuilder.Entity<Grade>()
-    //           .HasOne(t => t.Student)
-    //           .WithMany(s => s.Grades)
-    //           .HasForeignKey(g => g.StudentId)
-    //           .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<AssignmentStatus>().HasData(
+                new AssignmentStatus { Id = 1, Name = "ToDo" },
+                new AssignmentStatus { Id = 2, Name = "InReview" },
+                new AssignmentStatus { Id = 3, Name = "PastDue" },
+                new AssignmentStatus { Id = 4, Name = "Marked" }
+            );
         }
     }
 }

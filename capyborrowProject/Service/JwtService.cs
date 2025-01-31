@@ -1,4 +1,4 @@
-﻿using capyborrowProject.Models;
+﻿using capyborrowProject.Models.AuthModels;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.IdentityModel.Tokens.Jwt;

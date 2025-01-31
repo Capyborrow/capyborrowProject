@@ -8,6 +8,7 @@ using System.Text;
 using Microsoft.OpenApi.Models;
 using System.Diagnostics;
 using Microsoft.AspNetCore.Identity;
+using capyborrowProject.Models.AuthModels;
 
 var builder = WebApplication.CreateBuilder(args);
 

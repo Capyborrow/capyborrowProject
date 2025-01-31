@@ -10,6 +10,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using System.Diagnostics;
 using Microsoft.AspNetCore.Http.HttpResults;
+using capyborrowProject.Models.AuthModels;
 
 namespace capyborrowProject.Controllers
 {
