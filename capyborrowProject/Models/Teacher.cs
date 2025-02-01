@@ -1,8 +1,10 @@
-﻿namespace capyborrowProject.Models
+﻿using capyborrowProject.Models.JoinTables;
+
+namespace capyborrowProject.Models
 {
     public class Teacher : ApplicationUser
     {
-        public ICollection<Subject> Subjects { get; set; } = new List<Subject>();
-        public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
+        public ICollection<TeacherSubject> TeacherSubjects { get; set; } = new List<TeacherSubject>();
+        public ICollection<Lesson> Lessons { get; set; } = new List<Lesson>();
     }
 }

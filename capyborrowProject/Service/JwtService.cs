@@ -1,4 +1,4 @@
-﻿using capyborrowProject.Models;
+﻿using capyborrowProject.Models.AuthModels;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.IdentityModel.Tokens.Jwt;
@@ -17,13 +17,12 @@ namespace capyborrowProject.Service
             _jwtSettings = configuration.GetSection("Jwt").Get<JwtSettings>();
         }
 
-        public string GenerateAccessToken(object payload)
-        {
-            return GenerateJwtToken(payload, _jwtSettings.AccessTokenSecret, TimeSpan.FromSeconds(_jwtSettings.AccessTokenExpiryInSeconds));
-        }
-
         public string GenerateAccessToken(IEnumerable<Claim> claims)
         {
+            foreach (Claim claim in claims)
+            {
+                Console.WriteLine($"GAT: Claim Type: {claim.Type}, Claim Value: {claim.Value}");
+            }
             return GenerateJwtToken(claims, _jwtSettings.AccessTokenSecret, TimeSpan.FromSeconds(_jwtSettings.AccessTokenExpiryInSeconds));
         }
 
@@ -32,36 +31,17 @@ namespace capyborrowProject.Service
             return GenerateJwtToken(claims, _jwtSettings.RefreshTokenSecret, TimeSpan.FromSeconds(_jwtSettings.RefreshTokenExpiryInSeconds));
         }
 
-        private string GenerateJwtToken(object payload, string secret, TimeSpan expiresIn)
-        {
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
-            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-            var claims = payload.GetType()
-                .GetProperties()
-                .Select(p => new Claim(p.Name, p.GetValue(payload)?.ToString() ?? string.Empty))
-                .ToList();
-
-            var tokenDescriptor = new SecurityTokenDescriptor
-            {
-                Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.UtcNow.Add(expiresIn),
-                Issuer = _jwtSettings.Issuer,
-                Audience = _jwtSettings.Audience,
-                SigningCredentials = credentials,
-            };
-
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-
-            return tokenHandler.WriteToken(token);
-        }
-
         private string GenerateJwtToken(IEnumerable<Claim> claims, string secret, TimeSpan expiresIn)
         {
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
+            foreach (Claim claim in claims)
+            {
+                Console.WriteLine($"GJWTT: Claim Type: {claim.Type}, Claim Value: {claim.Value}");
+            }
+
+         
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),
@@ -76,7 +56,6 @@ namespace capyborrowProject.Service
 
             return tokenHandler.WriteToken(token);
         }
-
         public ClaimsPrincipal? ValidateAccessToken(string token)
         {
             return ValidateJwtToken(token, _jwtSettings.AccessTokenSecret);

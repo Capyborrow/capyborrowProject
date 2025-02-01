@@ -10,6 +10,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using System.Diagnostics;
 using Microsoft.AspNetCore.Http.HttpResults;
+using capyborrowProject.Models.AuthModels;
 
 namespace capyborrowProject.Controllers
 {
@@ -81,6 +82,7 @@ namespace capyborrowProject.Controllers
                 await _roleManager.CreateAsync(new IdentityRole(request.Role));
             await _userManager.AddToRoleAsync(user, request.Role);
 
+
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id),
@@ -90,6 +92,11 @@ namespace capyborrowProject.Controllers
             var roles = await _userManager.GetRolesAsync(user);
             claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
 
+            // Console log claims
+            foreach (var claim in claims)
+            {
+                Console.WriteLine($"Claim Type: {claim.Type}, Claim Value: {claim.Value}");
+            }
             await _userManager.AddClaimsAsync(user, claims);
 
             var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
@@ -121,7 +128,12 @@ namespace capyborrowProject.Controllers
 
 
             var claims = _userManager.GetClaimsAsync(user).Result.ToList();
-            Console.WriteLine(claims);
+
+            foreach (var claim in claims)
+            {
+                Console.WriteLine($"Claim Type: {claim.Type}, Claim Value: {claim.Value}");
+            }
+
             var refreshToken = _jwtService.GenerateRefreshToken(claims/*new List<Claim> { new Claim(ClaimTypes.Email, user.Email) }*/);
             var accessToken = _jwtService.GenerateAccessToken(claims);
 

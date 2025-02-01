@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace capyborrowProject.Models
+namespace capyborrowProject.Models.AuthModels
 {
     public class LoginRequest
     {

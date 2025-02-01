@@ -1,4 +1,4 @@
-﻿namespace capyborrowProject.Models
+﻿namespace capyborrowProject.Models.AuthModels
 {
     public class JwtSettings
     {
