@@ -41,12 +41,6 @@ builder.Services.Configure<IdentityOptions>(options =>
 
 });
 
-builder.Services.ConfigureApplicationCookie(options =>
-{
-    options.LoginPath = "/Auth/Login";   // Custom login path
-    options.LogoutPath = "/Auth/Logout"; // Custom logout path
-});
-
 builder.Services.AddSingleton<EmailService>();
 
 
@@ -103,7 +97,11 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
 builder.Services.AddScoped<JwtService>();
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
     .AddJwtBearer(options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters
@@ -111,7 +109,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuer = true,
             ValidateAudience = true,
             ValidateLifetime = true,
-            ClockSkew = TimeSpan.Zero,
+            ClockSkew = TimeSpan.FromSeconds(15),
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:AccessTokenSecret"] ?? string.Empty)),
             ValidateIssuerSigningKey = true,
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
@@ -121,15 +119,21 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         {
             OnAuthenticationFailed = context =>
             {
-                Debug.WriteLine($"Authentication failed: {context.Exception.Message}");
+                Console.WriteLine($"Authentication failed: {context.Exception.Message}");
                 return Task.CompletedTask;
             },
             OnChallenge = context =>
             {
-                Debug.WriteLine($"Token validation failed: {context.ErrorDescription}");
-                Debug.WriteLine($"Error: {context.AuthenticateFailure?.Message}");
+                Console.WriteLine($"Token validation failed: {context.ErrorDescription}");
+                Console.WriteLine($"Error: {context.AuthenticateFailure?.Message}");
+                return Task.CompletedTask;
+            },
+            OnForbidden = context =>
+            {
+                Console.WriteLine($"Token validation failed: {context.Response}");
                 return Task.CompletedTask;
             }
+          
         };
 
     });
