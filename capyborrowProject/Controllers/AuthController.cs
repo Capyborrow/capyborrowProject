@@ -39,10 +39,10 @@ namespace capyborrowProject.Controllers
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+                return BadRequest(new { message = "Wrong register credentials", errors = ModelState });
 
             if (await _userManager.FindByEmailAsync(request.Email) != null)
-                return BadRequest("A user with this email already exists.");
+                return BadRequest(new { message = "A user with this email already exists." });
 
             ApplicationUser user = null;
 
@@ -70,13 +70,13 @@ namespace capyborrowProject.Controllers
             }
             else
             {
-                return BadRequest("Invalid role.");
+                return BadRequest(new { message = "Invalid role." });
             }
 
             var createUserResult = await _userManager.CreateAsync(user, request.Password);
 
             if (user is null)
-                return BadRequest("User registration failed.");
+                return BadRequest(new { message = "User registration failed." });
 
             if (!await _roleManager.RoleExistsAsync(request.Role))
                 await _roleManager.CreateAsync(new IdentityRole(request.Role));
@@ -92,22 +92,17 @@ namespace capyborrowProject.Controllers
             var roles = await _userManager.GetRolesAsync(user);
             claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
 
-            // Console log claims
-            foreach (var claim in claims)
-            {
-                Console.WriteLine($"Claim Type: {claim.Type}, Claim Value: {claim.Value}");
-            }
             await _userManager.AddClaimsAsync(user, claims);
 
             var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            var confirmationLink = $"http://localhost:5174/confirm_email/?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(user.Email)}";
+            var confirmationLink = $"http://localhost:5174/confirm_email_status/?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(user.Email)}";
 
             var subject = "Confirm Your Email";
             var body = $"Click <a href='{confirmationLink}'>here</a> to confirm your email.";
 
             await _emailService.SendEmailAsync(user.Email, subject, body);
 
-            return Created("", new { Message = "User registered successfully." });
+            return Created(user.Email, new { Message = "User registered successfully." });
 
         }
 
@@ -116,25 +111,25 @@ namespace capyborrowProject.Controllers
         public async Task<IActionResult> Login([FromBody] LoginRequest request) 
         {
             if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+                return BadRequest(new { message = "Wrong login credentials", errors = ModelState });
 
             var user = await _userManager.FindByEmailAsync(request.Email);
 
             if (user is null)
-                return BadRequest("User not authenticated");
+                return BadRequest(new { message = "User not found." });
 
             if (!await _userManager.CheckPasswordAsync(user, request.Password))
-                return Unauthorized();
+                return Unauthorized(new {message = "Wrong login or password."});
+
+            if (!await _userManager.IsEmailConfirmedAsync(user))
+            {
+                return Unauthorized(new { message = "Email not confirmed." });
+            }
 
 
             var claims = _userManager.GetClaimsAsync(user).Result.ToList();
 
-            foreach (var claim in claims)
-            {
-                Console.WriteLine($"Claim Type: {claim.Type}, Claim Value: {claim.Value}");
-            }
-
-            var refreshToken = _jwtService.GenerateRefreshToken(claims/*new List<Claim> { new Claim(ClaimTypes.Email, user.Email) }*/);
+            var refreshToken = _jwtService.GenerateRefreshToken(claims);
             var accessToken = _jwtService.GenerateAccessToken(claims);
 
             _context.RefreshTokens.Add(new RefreshToken { UserId = user.Id, Token = refreshToken });
@@ -161,9 +156,6 @@ namespace capyborrowProject.Controllers
         {
             var refreshToken = Request.Cookies["jwt"];
 
-            if (string.IsNullOrEmpty(refreshToken))
-                return Unauthorized(new { Message = "Refresh token is missing or invalid." });
-
             var foundToken = await _context.RefreshTokens
                 .Include(rt => rt.User)
                 .SingleOrDefaultAsync(rt => rt.Token == refreshToken);
@@ -174,12 +166,12 @@ namespace capyborrowProject.Controllers
             var user = foundToken.User;
 
             if (user is null)
-                return Forbid("Bearer");
+                return StatusCode(StatusCodes.Status403Forbidden, new { message = "Forbidden" });
 
             var claimsPrincipal = _jwtService.ValidateRefreshToken(refreshToken);
 
             if (claimsPrincipal == null || claimsPrincipal.FindFirst(ClaimTypes.Email)?.Value != user.Email)
-                return Forbid("Bearer");
+                return StatusCode(StatusCodes.Status403Forbidden, new { message = "Forbidden" });
 
             var claims = _userManager.GetClaimsAsync(user).Result.ToList();
 
@@ -215,9 +207,6 @@ namespace capyborrowProject.Controllers
                 .Include(u => u.RefreshTokens)
                 .SingleOrDefaultAsync(u => u.RefreshTokens.Any(rt => rt.Token == refreshToken));
 
-            if (user is null)
-                return Forbid("Bearer");
-
             var existingToken = user.RefreshTokens.FirstOrDefault(rt => rt.Token == refreshToken);
 
             if (existingToken != null)
@@ -235,11 +224,11 @@ namespace capyborrowProject.Controllers
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+                return BadRequest(new { message = "Wrong forgot password credentials", errors = ModelState });
 
             var user = await _userManager.FindByEmailAsync(request.Email);
             if (user is null)
-                return BadRequest("User not found.");
+                return BadRequest(new { message = "User not found." });
 
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
 
@@ -259,11 +248,11 @@ namespace capyborrowProject.Controllers
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+                return BadRequest(new { message = "Wring reset password data.", errors = ModelState });
 
             var user = await _userManager.FindByEmailAsync(request.Email);
             if (user is null)
-                return BadRequest("User not found.");
+                return BadRequest(new { message = "User not found." });
 
             var result = await _userManager.ResetPasswordAsync(user, request.Token, request.NewPassword);
 
@@ -279,22 +268,22 @@ namespace capyborrowProject.Controllers
         {
             var user = await _userManager.FindByEmailAsync(request.Email);
             if (user is null)
-                return BadRequest("Invalid request.");
+                return BadRequest(new { message = "User not found." });
 
             if (await _userManager.IsEmailConfirmedAsync(user))
             {
-                return BadRequest("Email already confirmed");
+                return BadRequest(new { message = "Email already confirmed" });
             }
 
             var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            var confirmationLink = $"http://localhost:5174/confirm_email/?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(user.Email)}";
+            var confirmationLink = $"http://localhost:5174/confirm_email_status/?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(user.Email)}";
   
             var subject = "Confirm Your Email";
             var body = $"Click <a href='{confirmationLink}'>here</a> to confirm your email.";
 
             await _emailService.SendEmailAsync(user.Email, subject, body);
 
-            return Ok("Confirmation email resent.");
+            return Ok(new { mesage = "Confirmation email resent." });
         }
 
 
@@ -303,23 +292,43 @@ namespace capyborrowProject.Controllers
         public async Task<IActionResult> ConfirmEmail([FromBody] ConfirmEmailRequest request)
         {
             if (!ModelState.IsValid) {
-                return BadRequest(ModelState); 
+                return BadRequest(new { message = "Wrong data.", errors = ModelState }); 
             }
 
             var user = await _userManager.FindByEmailAsync(request.Email);
             if (user is null)
             {
-                return BadRequest("User not found.");
+                return BadRequest(new { message = "User not found." });
             }
 
             var result = await _userManager.ConfirmEmailAsync(user, request.Token);
 
             if (!result.Succeeded)
             {
-                return BadRequest(result.Errors);
+                return BadRequest(new { message = "Failed to confirm email.", errors = result.Errors });
             }
 
             return Ok(new { Message = "Email confirmed." });
+        }
+
+        [Route("CheckEmailConfirmation")]
+        [HttpPost]
+        public async Task<IActionResult> CheckEmailConfirmation([FromBody] CheckEmailConfirmationRequest request)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new { message = "Wrong data.", errors = ModelState });
+            }
+
+            var user = await _userManager.FindByEmailAsync(request.Email);
+            if (user is null)
+            {
+                return BadRequest(new { message = "User not found." });
+            }
+
+            var confirmed = await _userManager.IsEmailConfirmedAsync(user);
+
+            return Ok(new { Confirmed = confirmed });
         }
     }
 }
