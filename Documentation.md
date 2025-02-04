@@ -4,7 +4,7 @@
 - [Introduction](#introduction)
 - [Getting started](#getting-started)
 - [Project structure](#project-stucture)
-- [Code explanation](#code-explanation)
+- [AuthController Overview](#authcontroller-overview)
 - [Useful links](#useful-links)
 
 ## Introduction
@@ -36,22 +36,114 @@ If needed, restore the NuGet packages required for the project. In Visual Studio
 For now, Solution 'capyborrowProject' consists of two projects: _cappyborrowProject_ and _TestProject_.
 
 - **capyborrowProject**: contains the main application code.
-    - **Controllers folder**: contains three API controllers for Assignment, Teacher and Student models.
+    - **Controllers folder**: contains three API controllers for Teacher and Student models and for handling authentication.
     - **Data folder**: contains a database context class, the purpose of which is to act as a bridge between the application and the database, enabling the app to interact with the database in an object-oriented way.
-    - **Helpers folder**: serves as a container of different files that describe some additional functionality like password hashing.
     - **Migrations folder**: contains automatically generated files that create tables in the database based on the code written for models.
-    - **Models folder**: contains classes for entities: Assignment, User, Student, Teacher _(the last two are inherited from User)_. 
+    - **Models folder**: contains classes for entities, folders for predefined tables, join tables and authentication models.
+    - **Service folder**: contains utility classes (JwtService and EmailService) that handle authentication (JWT generation and validation) and email communication using Azure's Email Communication Service.
 - **TestProject**: contains unit tests for the application.
 
-## Code explanation
-> [!NOTE]
-> The description of API Controllers will be represented on the StudentController, because the TeacherController and the AssignmentController share the same or almost the same logic.
+## AuthController Overview
+The `AuthController` is responsible for handling user authentication and authorization in the application. It provides endpoints for user registration, login, access token refresh, logout, password recovery, and email confirmation. This controller leverages ASP.NET Core Identity and JWT authentication for secure user management.
+### Dependencies
+- `ApplicationDbContext`: Database context for managing user data.
+- `UserManager<ApplicationUser>`: Manages user-related operations (creation, password validation, etc.).
+- `RoleManager<IdentityRole>`: Handles user roles.
+- `JwtService`: Generates and validates JWT tokens.
+- `EmailService`: Sends email notifications.
+### Endpoints
+**Register User** (`POST /api/Auth/Register`)
+  - **Description**: Registers a new user (either Student or Teacher).
+  - **Request Body**:
+    ```
+    {
+      "firstName": "John",
+      "middleName": "A.",
+      "lastName": "Doe",
+      "email": "johndoe@example.com",
+      "password": "SecurePassword123!",
+      "role": "student"
+    }
+  - **Responses**:
+    - `201 Created`: User registered successfully.
+    - `400 Bad Request`: Invalid data or user already exists.
 
-Methods `GetAllStudents()`, `GetStudent()` and `DeleteStudent()` are self-explanatory.
+**Login User** (`POST /api/Auth/Login`)
+  - **Description**: Authenticates a user and returns an access token.
+  - **Request Body**:
+    ```
+    {
+      "email": "johndoe@example.com",
+      "password": "SecurePassword123!"
+    }
+  - **Responses**:
+    - `200 OK`: Returns an access token.
+    - `400 Bad Request`: Invalid credentials.
+    - `401 Unauthorized`: Password incorrect.
 
-`PostStudent()` takes a student object as a parameter and adds it to the database with the already hashed password, saves changes, wraps the given student object in an Ok result, which corresponds to a `200 OK HTTP` response and sends the student object back to the client in the response body.
+**Refresh Access Token** (`POST /api/Auth/RefreshAccessToken`)
+  - **Description**: Refreshes the user's access token using the stored refresh token.
+  - **Responses**:
+    - `200 OK`: Returns a new access token.
+    - `401 Unauthorized`: Missing or invalid refresh token.
 
-`PutStudent()` is used to update a student in the database. The function takes and id and a student object as parameters, ensures the id from the URL matches the id of the Student. Then the `EntityState.Modified` tells Entity Framework that the student entity has been changed and should be updated in the database. After that, the fuctnion tries to save the changes and if a concurrency issue occurs (e.g., the record was modified by another user or deleted), a `DbUpdateConcurrencyException` is thrown. Later, the code checks if a student with the given ID still exists. In case of success the function returns a `204 No Content` response.
+**Logout User** (`POST /api/Auth/Logout`)
+  - **Description**: Logs out a user by invalidating the refresh token.
+  - **Responses**:
+    - `200 OK`: User logged out.
+    - `403 Forbidden`: No valid refresh token found.
+
+**Forgot Password** (`POST /api/Auth/ForgotPassword`)
+  - **Description**: Sends a password reset link to the user's email.
+  - **Request Body**:
+    ```
+    {
+      "email": "johndoe@example.com"
+    }
+   - **Responses**:
+     - `200 OK`: Reset link sent.
+     - `400 Bad Request`: User not found.
+
+**Reset Password** (`POST /api/Auth/ResetPassword`)
+  - **Description**: Resets the user's password using a token.
+  - **Request Body**:
+    ```
+    {
+      "email": "johndoe@example.com",
+      "token": "reset-token",
+      "newPassword": "NewSecurePassword123!"
+    }
+   - **Responses**:
+     - `200 OK`: Password reset successful.
+     - `400 Bad Request`: Invalid token or request.
+
+**Resend Confirmation Email** (`POST /api/Auth/ResendConfirmationEmail`)
+  - **Description**: Resends the email confirmation link.
+  - **Request Body**:
+    ```
+    {
+      "email": "johndoe@example.com"
+    }
+   - **Responses**:
+     - `200 OK`: Confirmation email resent.
+     - `400 Bad Request`: Email already confirmed or user not found.
+
+**Confirm Email** (`POST /api/Auth/ConfirmEmail`)
+  - **Description**: Confirms the user's email using a token.
+  - **Request Body**:
+    ```
+    {
+      "email": "johndoe@example.com",
+      "token": "confirmation-token"
+    }
+   - **Responses**:
+     - `200 OK`: Email confirmed.
+     - `400 Bad Request`: Invalid token or request.
+
+> [NOTE!]
+> Refresh tokens are stored in the database and secured in HTTP-only cookies.
+> Claims are used to store user role and email information.
+> Console logging is used for debugging purposes (should be removed in production).
 
 ## Useful links
 - [For writing documentation](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#lists)
