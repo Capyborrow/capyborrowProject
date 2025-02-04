@@ -141,8 +141,8 @@ The `AuthController` is responsible for handling user authentication and authori
      - `400 Bad Request`: Invalid token or request.
 
 > [!NOTE]
-> Refresh tokens are stored in the database and secured in HTTP-only cookies.
-> Claims are used to store user role and email information.
+> Refresh tokens are stored in the database and secured in HTTP-only cookies.  
+> Claims are used to store user role and email information.  
 > Console logging is used for debugging purposes (should be removed in production).
 
 ## Useful links
