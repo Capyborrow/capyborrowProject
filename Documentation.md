@@ -140,6 +140,17 @@ The `AuthController` is responsible for handling user authentication and authori
      - `200 OK`: Email confirmed.
      - `400 Bad Request`: Invalid token or request.
 
+**Check Email Confirmation** (`POST /api/Auth/CheckEmailConfirmation`)
+  - **Description**: Checks whether a user's email has been confirmed.
+  - **Request Body**:
+    ```
+    {
+      "email": "johndoe@example.com"
+    }
+   - **Responses**:
+     - `200 OK`: Returns `{ "Confirmed": true }` if email is confirmed, otherwise `{ "Confirmed": false }`.
+     - `400 Bad Request`: User not found or invalid request.
+
 > [!NOTE]
 > Refresh tokens are stored in the database and secured in HTTP-only cookies.  
 > Claims are used to store user role and email information.  
