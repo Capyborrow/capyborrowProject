@@ -12,7 +12,7 @@ namespace capyborrowProject.Controllers
     [ApiController]
     public class StudentController(ApplicationDbContext context) : ControllerBase
     {
-        [Authorize(Roles = "student")]
+        [Authorize(Policy = "StudentOrAdmin")]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Student>>> GetAllStudents()
         {

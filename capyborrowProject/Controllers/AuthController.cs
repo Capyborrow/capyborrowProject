@@ -78,8 +78,6 @@ namespace capyborrowProject.Controllers
             if (user is null)
                 return BadRequest(new { message = "User registration failed." });
 
-            if (!await _roleManager.RoleExistsAsync(request.Role))
-                await _roleManager.CreateAsync(new IdentityRole(request.Role));
             await _userManager.AddToRoleAsync(user, request.Role);
 
 

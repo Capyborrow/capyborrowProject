@@ -6,9 +6,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.OpenApi.Models;
-using System.Diagnostics;
 using Microsoft.AspNetCore.Identity;
 using capyborrowProject.Models.AuthModels;
+using capyborrowProject.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -138,6 +138,24 @@ builder.Services.AddAuthentication(options =>
 
     });
 
+
+// Add Authorization policies
+builder.Services.AddAuthorization(options =>
+{
+    // This policy allows users with either "student" or "admin" roles.
+    options.AddPolicy("StudentOrAdmin", policy =>
+        policy.RequireRole("student", "admin"));
+
+    // This policy allows users with either "teacher" or "admin" roles.
+    options.AddPolicy("TeacherOrAdmin", policy =>
+        policy.RequireRole("teacher", "admin"));
+
+    // This policy allows users with "admin" role only.
+    options.AddPolicy("AdminOnly", policy =>
+        policy.RequireRole("admin"));
+});
+
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -156,5 +174,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+await app.SeedUserRolesAsync();
 
 app.Run();
