@@ -2,7 +2,6 @@
 using capyborrowProject.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using capyborrowProject.Models.PredefinedTables;
-using capyborrowProject.Models.JoinTables;
 
 namespace capyborrowProject.Data
 {
@@ -22,9 +21,6 @@ namespace capyborrowProject.Data
         public DbSet<LessonType> LessonTypes { get; set; } // Predefined table
         public DbSet<AssignmentStatus> AssignmentStatuses { get; set; } // Predefined table
 
-        public DbSet<GroupSubject> GroupSubjects { get; set; } // Join table
-        public DbSet<TeacherSubject> TeacherSubjects { get; set; } // Join table
-
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -40,30 +36,33 @@ namespace capyborrowProject.Data
                 .OnDelete(DeleteBehavior.Cascade);
 
             // Group-Subject (Many-to-Many)
-            modelBuilder.Entity<GroupSubject>().HasKey(gs => new { gs.GroupId, gs.SubjectId });
+            modelBuilder.Entity<Group>()
+                .HasMany(g => g.Subjects)
+                .WithMany(s => s.Groups)
+                .UsingEntity<Dictionary<string, object>>(
+                    "GroupSubject",
+                    j => j.HasOne<Subject>().WithMany().HasForeignKey("SubjectId"),
+                    j => j.HasOne<Group>().WithMany().HasForeignKey("GroupId"),
+                    j =>
+                    {
+                        j.HasKey("GroupId", "SubjectId");
+                    }
+                );
 
-            modelBuilder.Entity<GroupSubject>()
-                .HasOne(gs => gs.Group)
-                .WithMany(g => g.GroupSubjects)
-                .HasForeignKey(gs => gs.GroupId);
-
-            modelBuilder.Entity<GroupSubject>()
-                .HasOne(gs => gs.Subject)
-                .WithMany(s => s.GroupSubjects)
-                .HasForeignKey(gs => gs.SubjectId);
 
             // Teacher-Subject (Many-to-Many)
-            modelBuilder.Entity<TeacherSubject>().HasKey(ts => new { ts.TeacherId, ts.SubjectId });
-
-            modelBuilder.Entity<TeacherSubject>()
-                .HasOne(ts => ts.Teacher)
-                .WithMany(t => t.TeacherSubjects)
-                .HasForeignKey(ts => ts.TeacherId);
-
-            modelBuilder.Entity<TeacherSubject>()
-                .HasOne(ts => ts.Subject)
-                .WithMany(s => s.TeacherSubjects)
-                .HasForeignKey(ts => ts.SubjectId);
+            modelBuilder.Entity<Teacher>()
+                .HasMany(t => t.Subjects)
+                .WithMany(s => s.Teachers)
+                .UsingEntity<Dictionary<string, object>>(
+                    "TeacherSubject",
+                    j => j.HasOne<Subject>().WithMany().HasForeignKey("SubjectId"),
+                    j => j.HasOne<Teacher>().WithMany().HasForeignKey("TeacherId"),
+                    j =>
+                    {
+                        j.HasKey("TeacherId", "SubjectId");
+                    }
+                );
 
             // Student-Group (One-to-Many)
             modelBuilder.Entity<Student>()
