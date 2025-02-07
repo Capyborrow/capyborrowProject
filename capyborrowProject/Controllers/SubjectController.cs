@@ -15,10 +15,8 @@ namespace capyborrowProject.Controllers
         public async Task<ActionResult<Subject>> GetSubject(int id)
         {
             var subject = await context.Subjects
-                .Include(s => s.TeacherSubjects)
-                    .ThenInclude(ts => ts.Teacher)
-                .Include(s => s.GroupSubjects)
-                    .ThenInclude(gs => gs.Group)
+                .Include(s => s.Teachers)
+                .Include(s => s.Groups)
                 .FirstOrDefaultAsync(s => s.Id == id);
 
             return subject is null ? NotFound() : Ok(subject);
@@ -76,8 +74,8 @@ namespace capyborrowProject.Controllers
                 return NotFound();
             }
 
-            context.TeacherSubjects.RemoveRange(existingSubject.TeacherSubjects);
-            context.GroupSubjects.RemoveRange(existingSubject.GroupSubjects);
+            existingSubject.Teachers.Clear();
+            existingSubject.Groups.Clear();
 
             context.Subjects.Remove(existingSubject);
 

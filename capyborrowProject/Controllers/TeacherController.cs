@@ -16,7 +16,7 @@ namespace capyborrowProject.Controllers
         public async Task<ActionResult<IEnumerable<Teacher>>> GetAllTeachers()
         {
             var teachers = await context.Teachers
-                .Include(t => t.TeacherSubjects)
+                .Include(t => t.Subjects)
                 .Include(t => t.Lessons)
                 .ToListAsync();
 
@@ -27,7 +27,7 @@ namespace capyborrowProject.Controllers
         public async Task<ActionResult<Student>> GetTeacher(string id)
         {
             var teacher = await context.Teachers
-                .Include(t => t.TeacherSubjects)
+                .Include(t => t.Subjects)
                 .Include(t => t.Lessons)
                 .FirstOrDefaultAsync(t => t.Id == id);
 
@@ -89,6 +89,9 @@ namespace capyborrowProject.Controllers
             {
                 return NotFound();
             }
+
+            teacher.Subjects.Clear();
+            teacher.Lessons.Clear();
 
             context.Teachers.Remove(teacher);
             await context.SaveChangesAsync();
