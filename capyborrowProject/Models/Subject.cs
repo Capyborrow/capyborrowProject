@@ -1,5 +1,4 @@
-﻿using capyborrowProject.Models.JoinTables;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace capyborrowProject.Models
 {
@@ -10,7 +9,7 @@ namespace capyborrowProject.Models
         [MaxLength(100)]
         public required string Name { get; set; }
 
-        public ICollection<TeacherSubject> TeacherSubjects { get; set; } = new List<TeacherSubject>();
-        public ICollection<GroupSubject> GroupSubjects { get; set; } = new List<GroupSubject>();
+        public ICollection<Teacher> Teachers { get; set; } = new List<Teacher>();
+        public ICollection<Group> Groups { get; set; } = new List<Group>();
     }
 }
