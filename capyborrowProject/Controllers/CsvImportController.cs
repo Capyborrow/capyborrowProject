@@ -54,7 +54,6 @@ public class CsvImportController : ControllerBase
                     LastName = userDto.LastName,
                     Email = userDto.Email,
                     UserName = userDto.Email,
-                    EmailConfirmed = true
                 };
             }
             else if (userDto.Role.ToLower() == "teacher")
@@ -66,7 +65,6 @@ public class CsvImportController : ControllerBase
                     LastName = userDto.LastName,
                     Email = userDto.Email,
                     UserName = userDto.Email,
-                    EmailConfirmed = true
                 };
             }
 
