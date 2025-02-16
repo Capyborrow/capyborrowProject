@@ -24,14 +24,14 @@ namespace capyborrowProject.Controllers
             return timetable is null ? NotFound() : Ok(timetable);
         }
         [HttpGet("teacher/{teacherId}")]
-        public async Task<ActionResult<IEnumerable<Lesson>>> GetTeacherTimetable(DateTime startDate, DateTime endDate, int teacherId)
+        public async Task<ActionResult<IEnumerable<Lesson>>> GetTeacherTimetable(DateTime startDate, DateTime endDate, string teacherId)
         {
             var timetable = await context.Lessons
                 .Include(l => l.Subject)
                 .Include(l => l.Teacher)
                 .Include(l => l.Group)
                 .Include(l => l.Notification)
-                .Where(l => l.Date >= startDate && l.Date <= endDate && l.TeacherId == teacherId.ToString())
+                .Where(l => l.Date >= startDate && l.Date <= endDate && l.TeacherId == teacherId)
                 .ToListAsync();
 
             return timetable is null ? NotFound() : Ok(timetable);
