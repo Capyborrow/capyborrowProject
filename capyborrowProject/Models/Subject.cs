@@ -9,7 +9,6 @@ namespace capyborrowProject.Models
         [MaxLength(100)]
         public required string Name { get; set; }
 
-        public ICollection<Teacher> Teachers { get; set; } = new List<Teacher>();
-        public ICollection<Group> Groups { get; set; } = new List<Group>();
+        public ICollection<Lesson> Lessons { get; set; } = new List<Lesson>();
     }
 }

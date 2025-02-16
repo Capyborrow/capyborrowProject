@@ -1,18 +1,25 @@
-﻿using capyborrowProject.Models.PredefinedTables;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace capyborrowProject.Models
 {
     public class Lesson
     {
+        public enum LessonType
+        {
+            Lecture,
+            Practice,
+            Seminar,
+            Consultation,
+            Exam
+        }
+
         public int Id { get; set; }
 
         [MaxLength(100)]
         public string? Location { get; set; }
         public DateTime? Date { get; set; }
 
-        public int? LessonTypeId { get; set; }
-        public LessonType? LessonType { get; set; }
+        public LessonType Type { get; set; }
 
         public int? SubjectId { get; set; }
         public Subject? Subject { get; set; }
@@ -26,8 +33,6 @@ namespace capyborrowProject.Models
         public int? GroupId { get; set; }
         public Group? Group { get; set; }
 
-        //public int? AssignmentId { get; set; }
-        //public Assignment? Assignment { get; set; }
-
+        public ICollection<Assignment> Assignments { get; set; } = new List<Assignment>();
     } 
 }

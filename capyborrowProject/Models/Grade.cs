@@ -6,10 +6,10 @@
 
         public float Score { get; set; }
 
-        public string? StudentId { get; set; }
-        public Student? Student { get; set; }
+        public string StudentId { get; set; } = null!;
+        public Student Student { get; set; } = null!;
 
-        public int? AssignmentId { get; set; }
-        public Assignment? Assignment { get; set; }
+        public int AssignmentId { get; set; }
+        public Assignment Assignment { get; set; } = null!;
     }
 }
