@@ -14,7 +14,6 @@ namespace capyborrowProject.Controllers
         public async Task<ActionResult<IEnumerable<Lesson>>> GetGroupTimetable(DateTime startDate, DateTime endDate, int groupId)
         {
             var timetable = await context.Lessons
-                .Include(l => l.LessonType)
                 .Include(l => l.Subject)
                 .Include(l => l.Teacher)
                 .Include(l => l.Group)
@@ -28,7 +27,6 @@ namespace capyborrowProject.Controllers
         public async Task<ActionResult<IEnumerable<Lesson>>> GetTeacherTimetable(DateTime startDate, DateTime endDate, int teacherId)
         {
             var timetable = await context.Lessons
-                .Include(l => l.LessonType)
                 .Include(l => l.Subject)
                 .Include(l => l.Teacher)
                 .Include(l => l.Group)

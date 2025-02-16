@@ -14,8 +14,6 @@ namespace capyborrowProject.Controllers
         public async Task<ActionResult<Assignment>> GetAssignment(int id)
         {
             var assignment = await context.Assignments
-                .Include(a => a.Group)
-                .Include(a => a.AssignmentStatus)
                 .Include(a => a.Lesson)
                 .FirstOrDefaultAsync(a => a.Id == id);
 
@@ -54,8 +52,6 @@ namespace capyborrowProject.Controllers
             existingAssignment.Name = updatedAssignment.Name;
             existingAssignment.Description = updatedAssignment.Description;
             existingAssignment.DueDate = updatedAssignment.DueDate;
-            existingAssignment.GroupId = updatedAssignment.GroupId;
-            existingAssignment.AssignmentStatusId = updatedAssignment.AssignmentStatusId;
             existingAssignment.LessonId = updatedAssignment.LessonId;
             context.Entry(existingAssignment).State = EntityState.Modified;
             try

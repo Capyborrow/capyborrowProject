@@ -14,7 +14,7 @@ namespace capyborrowProject.Controllers
         public async Task<ActionResult<Lesson>> GetLesson(int id)
         {
             var lesson = await context.Lessons
-                .Include(l => l.LessonType)
+                .Include(l => l.Assignments)
                 .Include(l => l.Subject)
                 .Include(l => l.Notification)
                 .Include(l => l.Teacher)
@@ -55,7 +55,6 @@ namespace capyborrowProject.Controllers
 
             existingLesson.Location = updatedLesson.Location;
             existingLesson.Date = updatedLesson.Date;
-            existingLesson.LessonTypeId = updatedLesson.LessonTypeId;
             existingLesson.SubjectId = updatedLesson.SubjectId;
             existingLesson.NotificationId = updatedLesson.NotificationId;
             existingLesson.TeacherId = updatedLesson.TeacherId;

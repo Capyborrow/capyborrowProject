@@ -14,9 +14,7 @@ namespace capyborrowProject.Controllers
         {
             var groups = await context.Groups
                 .Include(g => g.Students)
-                .Include(g => g.Subjects)
                 .Include(g => g.Lessons)
-                .Include(g => g.Assignments)
                 .ToListAsync();
 
             return Ok(groups);
@@ -27,9 +25,7 @@ namespace capyborrowProject.Controllers
         {
             var group = await context.Groups
                 .Include(g => g.Students)
-                .Include(g => g.Subjects)
                 .Include(g => g.Lessons)
-                .Include(g => g.Assignments)
                 .FirstOrDefaultAsync(g => g.Id == id);
 
             return group is null ? NotFound() : Ok(group);
