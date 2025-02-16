@@ -13,6 +13,14 @@ namespace capyborrowProject.Models
             Exam
         }
 
+        public enum AttendanceType
+        {
+            Present,
+            Absent,
+            Cancelled,
+            Unknown
+        }
+
         public int Id { get; set; }
 
         [MaxLength(100)]
@@ -20,6 +28,7 @@ namespace capyborrowProject.Models
         public DateTime? Date { get; set; }
 
         public LessonType Type { get; set; }
+        public AttendanceType Attendance { get; set; }
 
         public int? SubjectId { get; set; }
         public Subject? Subject { get; set; }
