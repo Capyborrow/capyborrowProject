@@ -2,10 +2,11 @@
 using capyborrowProject.Models.CsvFilesModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using CsvHelper;
 using System.Globalization;
 using System.Security.Claims;
-
+using capyborrowProject.Data;
 
 namespace capyborrowProject.Controllers;
 
@@ -13,9 +14,11 @@ namespace capyborrowProject.Controllers;
 [ApiController]
 public class CsvImportController : ControllerBase
 {
+    private readonly ApplicationDbContext _context;
     private readonly UserManager<ApplicationUser> _userManager;
-    public CsvImportController(UserManager<ApplicationUser> userManager)
+    public CsvImportController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
     {
+        _context = context;
         _userManager = userManager;
     }
 
@@ -112,6 +115,54 @@ public class CsvImportController : ControllerBase
             totalSuccessful = successUsers.Count,
             totalFailed = errors.Count,
             successfulUsers = successUsers,
+            errors
+        };
+
+        return errors.Count > 0 ? BadRequest(response) : Ok(response);
+    }
+
+    [Route("ImportSubjectsFromCSV")]
+    [HttpPost]
+    public async Task<IActionResult> ImportSubjects(IFormFile file)
+    {
+        if (file == null || file.Length == 0)
+            return BadRequest("Upload a valid CSV file.");
+
+        var errors = new List<string>();
+        var successSubjects = new List<string>();
+
+        using var reader = new StreamReader(file.OpenReadStream());
+        using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+        csv.Context.RegisterClassMap<SubjectCsvMap>();
+
+        var records = csv.GetRecords<SubjectCsvDto>().ToList();
+
+        foreach (var subjectDto in records)
+        {
+            if (await _context.Subjects.AnyAsync(s => s.Name == subjectDto.Name))
+            {
+                errors.Add($"Subject '{subjectDto.Name}' already exists.");
+                continue;
+            }
+
+            var subject = new Subject
+            {
+                Name = subjectDto.Name
+            };
+
+            _context.Subjects.Add(subject);
+            successSubjects.Add(subjectDto.Name);
+        }
+
+        await _context.SaveChangesAsync();
+
+        var response = new
+        {
+            message = "Import completed.",
+            totalProcessed = records.Count,
+            totalSuccessful = successSubjects.Count,
+            totalFailed = errors.Count,
+            successfulSubjects = successSubjects,
             errors
         };
 
