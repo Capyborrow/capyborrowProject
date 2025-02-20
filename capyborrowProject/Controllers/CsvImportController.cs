@@ -168,5 +168,74 @@ public class CsvImportController : ControllerBase
 
         return errors.Count > 0 ? BadRequest(response) : Ok(response);
     }
+
+    [Route("ImportLessonsFromCSV")]
+    [HttpPost]
+    public async Task<IActionResult> ImportLessons(IFormFile file)
+    {
+        if (file == null || file.Length == 0)
+            return BadRequest("Upload a valid CSV file.");
+
+        var errors = new List<string>();
+        var successLessons = new List<string>();
+
+        using var reader = new StreamReader(file.OpenReadStream());
+        using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+        csv.Context.RegisterClassMap<LessonCsvMap>();
+
+        var records = csv.GetRecords<LessonCsvDto>().ToList();
+
+        foreach (var lessonDto in records)
+        {
+            var subject = await _context.Subjects.SingleOrDefaultAsync(s => s.Name == lessonDto.SubjectName);
+            if (subject == null)
+            {
+                errors.Add($"Subject '{lessonDto.SubjectName}' not found.");
+                continue;
+            }
+
+            var teacher = await _context.Teachers.SingleOrDefaultAsync(t => t.Email == lessonDto.TeacherEmail);
+            if (teacher == null)
+            {
+                errors.Add($"Teacher with email '{lessonDto.TeacherEmail}' not found.");
+                continue;
+            }
+
+            var group = await _context.Groups.SingleOrDefaultAsync(g => g.Name == lessonDto.GroupName);
+            if (group == null)
+            {
+                errors.Add($"Group '{lessonDto.GroupName}' not found.");
+                continue;
+            }
+
+            var lesson = new Lesson
+            {
+                Location = lessonDto.Location,
+                Date = lessonDto.Date,
+                Type = (Lesson.LessonType)lessonDto.Type,
+                Attendance = (Lesson.AttendanceType)lessonDto.Attendance,
+                Subject = subject,
+                Teacher = teacher,
+                Group = group
+            };
+
+            _context.Lessons.Add(lesson);
+            successLessons.Add($"{lessonDto.SubjectName} at {lessonDto.Location} on {lessonDto.Date}");
+        }
+
+        await _context.SaveChangesAsync();
+
+        var response = new
+        {
+            message = "Import completed.",
+            totalProcessed = records.Count,
+            totalSuccessful = successLessons.Count,
+            totalFailed = errors.Count,
+            successfulLessons = successLessons,
+            errors
+        };
+
+        return errors.Count > 0 ? BadRequest(response) : Ok(response);
+    }
 }
 
