@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 
-namespace cappyborrowProject.Tests.Controllers
+namespace capyborrowProject.Tests.Controllers
 {
     [TestFixture]
     class AuthControllerTests
