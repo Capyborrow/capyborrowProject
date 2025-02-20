@@ -237,5 +237,67 @@ public class CsvImportController : ControllerBase
 
         return errors.Count > 0 ? BadRequest(response) : Ok(response);
     }
+
+    [Route("ImportGroupsFromCSV")]
+    [HttpPost]
+    public async Task<IActionResult> ImportGroups(IFormFile file)
+    {
+        if (file == null || file.Length == 0)
+            return BadRequest("Upload a valid CSV file.");
+
+        var errors = new List<string>();
+        var successGroups = new List<string>();
+
+        using var reader = new StreamReader(file.OpenReadStream());
+        using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+        csv.Context.RegisterClassMap<GroupCsvMap>();
+
+        var records = csv.GetRecords<GroupCsvDto>().ToList();
+
+        foreach (var record in records)
+        {
+            var group = await _context.Groups
+                .Include(g => g.Students)
+                .FirstOrDefaultAsync(g => g.Name == record.GroupName);
+
+            if (group == null)
+            {
+                group = new Group { Name = record.GroupName };
+                _context.Groups.Add(group);
+                await _context.SaveChangesAsync();
+            }
+
+            var student = await _context.Students
+                .FirstOrDefaultAsync(s => s.Email == record.StudentEmail);
+
+            if (student == null)
+            {
+                errors.Add($"Student with email '{record.StudentEmail}' not found.");
+                continue;
+            }
+
+            if (!group.Students.Contains(student))
+            {
+                group.Students.Add(student);
+                successGroups.Add($"{student.Email} -> {group.Name}");
+            }
+        }
+
+        await _context.SaveChangesAsync();
+
+        var response = new
+        {
+            message = "Import completed.",
+            totalProcessed = records.Count,
+            totalSuccessful = successGroups.Count,
+            totalFailed = errors.Count,
+            successfulEntries = successGroups,
+            errors
+        };
+
+        return errors.Count > 0 ? BadRequest(response) : Ok(response);
+    }
+
 }
+
 
