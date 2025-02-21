@@ -14,8 +14,10 @@ namespace capyborrowProject.Data
         public DbSet<Subject> Subjects { get; set; }
         public DbSet<Lesson> Lessons { get; set; }
         public DbSet<Assignment> Assignments { get; set; }
-        public DbSet<Grade> Grades { get; set; }
-        public DbSet<Notification> Notifications { get; set; }
+        public DbSet<StudentAssignment> StudentAssignments { get; set; }
+        public DbSet<Comment> Comments { get; set; }
+        public DbSet<CommentReadStatus> CommentReadStatuses { get; set; }
+        public DbSet<Attendance> Attendances { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -31,6 +33,24 @@ namespace capyborrowProject.Data
                 .HasForeignKey(rt => rt.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            // Composite primary key for StudentAssignment
+            modelBuilder.Entity<StudentAssignment>()
+                .HasKey(sa => new { sa.StudentId, sa.AssignmentId });
+
+            // Student-StudentAssignment (One-to-Many)
+            modelBuilder.Entity<StudentAssignment>()
+                .HasOne(sa => sa.Student)
+                .WithMany(s => s.StudentAssignments)
+                .HasForeignKey(sa => sa.StudentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Assignment-StudentAssignment (One-to-Many)
+            modelBuilder.Entity<StudentAssignment>()
+                .HasOne(sa => sa.Assignment)
+                .WithMany(a => a.StudentAssignments)
+                .HasForeignKey(sa => sa.AssignmentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             // Student-Group (Many-to-One)
             modelBuilder.Entity<Student>()
                 .HasOne(s => s.Group)
@@ -38,19 +58,22 @@ namespace capyborrowProject.Data
                 .HasForeignKey(s => s.GroupId)
                 .OnDelete(DeleteBehavior.SetNull);
 
-            // Grade-Student (Many-to-One)
-            modelBuilder.Entity<Grade>()
-                .HasOne(g => g.Student)
-                .WithMany(s => s.Grades)
-                .HasForeignKey(g => g.StudentId)
+            // Composite primary key for Attendance
+            modelBuilder.Entity<Attendance>()
+                .HasKey(a => new { a.LessonId, a.StudentId });
+
+            // Lesson-Attendance (One-to-Many)
+            modelBuilder.Entity<Attendance>()
+                .HasOne(a => a.Lesson)
+                .WithMany(l => l.Attendances)
+                .HasForeignKey(a => a.LessonId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Grade-Assignment (Many-to-One)
-            modelBuilder.Entity<Grade>()
-                .HasOne(g => g.Assignment)
-                .WithMany(a => a.Grades)
-                .HasForeignKey(g => g.AssignmentId)
-                .OnDelete(DeleteBehavior.Cascade);
+            // Student-Attendance (One-to-Many)
+            modelBuilder.Entity<Attendance>()
+                .HasOne(a => a.Student)
+                .WithMany(s => s.Attendances)
+                .HasForeignKey(a => a.StudentId);
 
             // Lesson-Group (Many-to-One)
             modelBuilder.Entity<Lesson>()
@@ -62,19 +85,59 @@ namespace capyborrowProject.Data
             modelBuilder.Entity<Lesson>()
                 .HasOne(l => l.Subject)
                 .WithMany(s => s.Lessons)
-                .HasForeignKey(l => l.SubjectId);
+                .HasForeignKey(l => l.SubjectId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             // Lesson-Teacher (Many-to-One)
             modelBuilder.Entity<Lesson>()
                 .HasOne(l => l.Teacher)
                 .WithMany(t => t.Lessons)
-                .HasForeignKey(l => l.TeacherId);
+                .HasForeignKey(l => l.TeacherId)
+                .OnDelete(DeleteBehavior.SetNull);
 
-            // Lesson-Notification (One-to-One)
-            modelBuilder.Entity<Lesson>()
-                .HasOne(l => l.Notification)
-                .WithOne(n => n.Lesson)
-                .HasForeignKey<Notification>(n => n.LessonId);
+            // Comment-Lesson (Many-to-One)
+            modelBuilder.Entity<Comment>()
+                .HasOne(c => c.Lesson)
+                .WithMany(l => l.Comments)
+                .HasForeignKey(c => c.LessonId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // Comment-User (Many-to-One)
+            modelBuilder.Entity<Comment>()
+                .HasOne(c => c.User)
+                .WithMany(u => u.Comments)
+                .HasForeignKey(c => c.UserId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // Comment-Assignment (Many-to-One)
+            modelBuilder.Entity<Comment>()
+                .HasOne(c => c.Assignment)
+                .WithMany(a => a.Comments)
+                .HasForeignKey(c => c.AssignmentId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // Reply relationship
+            modelBuilder.Entity<Comment>()
+                .HasOne(c => c.ParentComment)
+                .WithMany(c => c.Replies)
+                .HasForeignKey(c => c.ParentCommentId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // Composite primary key for CommentReadStatus
+            modelBuilder.Entity<CommentReadStatus>()
+                .HasKey(crs => new { crs.CommentId, crs.UserId });
+
+            // Comment-CommentReadStatus (One-to-Many)
+            modelBuilder.Entity<CommentReadStatus>()
+                .HasOne(crs => crs.Comment)
+                .WithMany(c => c.CommentReadStatuses)
+                .HasForeignKey(crs => crs.CommentId);
+
+            // User-CommentReadStatus (One-to-Many)
+            modelBuilder.Entity<CommentReadStatus>()
+                .HasOne(crs => crs.User)
+                .WithMany(u => u.CommentReadStatuses)
+                .HasForeignKey(crs => crs.UserId);
 
             // Assignment-Lesson (Many-to-One)
             modelBuilder.Entity<Assignment>()
