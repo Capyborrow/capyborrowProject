@@ -16,7 +16,7 @@ namespace capyborrowProject.Controllers
             var lesson = await context.Lessons
                 .Include(l => l.Assignments)
                 .Include(l => l.Subject)
-                .Include(l => l.Notification)
+                .Include(l => l.Comments)
                 .Include(l => l.Teacher)
                 .Include(l => l.Group)
                 .FirstOrDefaultAsync(l => l.Id == id);
@@ -53,10 +53,10 @@ namespace capyborrowProject.Controllers
                 return NotFound();
             }
 
-            existingLesson.Location = updatedLesson.Location;
+            existingLesson.Room = updatedLesson.Room;
+            existingLesson.Link = updatedLesson.Link;
             existingLesson.Date = updatedLesson.Date;
             existingLesson.SubjectId = updatedLesson.SubjectId;
-            existingLesson.NotificationId = updatedLesson.NotificationId;
             existingLesson.TeacherId = updatedLesson.TeacherId;
             existingLesson.GroupId = updatedLesson.GroupId;
             context.Entry(existingLesson).State = EntityState.Modified;

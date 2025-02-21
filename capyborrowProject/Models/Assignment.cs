@@ -4,14 +4,6 @@ namespace capyborrowProject.Models
 {
     public class Assignment
     {
-        public enum AssignmentStatus
-        {
-            Done,
-            Due,
-            Overdue,
-            Marked
-        }
-
         public int Id { get; set; }
 
         [MaxLength(100)]
@@ -19,11 +11,12 @@ namespace capyborrowProject.Models
         public string? Description { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime? DueDate { get; set; }
-        public AssignmentStatus Status { get; set; }
+        public required float MaxScore { get; set; }
 
-        public int LessonId { get; set; }
+        public int? LessonId { get; set; }
         public Lesson Lesson { get; set; } = null!;
 
-        public ICollection<Grade> Grades { get; set; } = new List<Grade>();
+        public ICollection<StudentAssignment> StudentAssignments { get; set; } = new List<StudentAssignment>();
+        public ICollection<Comment> Comments { get; set; } = new List<Comment>();
     }
 }

@@ -17,7 +17,7 @@ namespace capyborrowProject.Controllers
                 .Include(l => l.Subject)
                 .Include(l => l.Teacher)
                 .Include(l => l.Group)
-                .Include(l => l.Notification)
+                .Include(l => l.Comments)
                 .Where(l => l.Date >= startDate && l.Date <= endDate && l.GroupId == groupId)
                 .ToListAsync();
 
@@ -30,7 +30,7 @@ namespace capyborrowProject.Controllers
                 .Include(l => l.Subject)
                 .Include(l => l.Teacher)
                 .Include(l => l.Group)
-                .Include(l => l.Notification)
+                .Include(l => l.Comments)
                 .Where(l => l.Date >= startDate && l.Date <= endDate && l.TeacherId == teacherId)
                 .ToListAsync();
 

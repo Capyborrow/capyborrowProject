@@ -12,8 +12,8 @@ using capyborrowProject.Data;
 namespace capyborrowProject.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250131133600_RelationshipsMigration")]
-    partial class RelationshipsMigration
+    [Migration("20250221172202_InitialMigration")]
+    partial class InitialMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -257,9 +257,6 @@ namespace capyborrowProject.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("AssignmentStatusId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
 
@@ -269,11 +266,11 @@ namespace capyborrowProject.Migrations
                     b.Property<DateTime?>("DueDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("GroupId")
-                        .HasColumnType("int");
-
                     b.Property<int?>("LessonId")
                         .HasColumnType("int");
+
+                    b.Property<float>("MaxScore")
+                        .HasColumnType("real");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -282,16 +279,30 @@ namespace capyborrowProject.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AssignmentStatusId");
-
-                    b.HasIndex("GroupId");
-
                     b.HasIndex("LessonId");
 
                     b.ToTable("Assignments");
                 });
 
-            modelBuilder.Entity("capyborrowProject.Models.Grade", b =>
+            modelBuilder.Entity("capyborrowProject.Models.Attendance", b =>
+                {
+                    b.Property<int>("LessonId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("StudentId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.HasKey("LessonId", "StudentId");
+
+                    b.HasIndex("StudentId");
+
+                    b.ToTable("Attendances");
+                });
+
+            modelBuilder.Entity("capyborrowProject.Models.Comment", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -302,19 +313,58 @@ namespace capyborrowProject.Migrations
                     b.Property<int?>("AssignmentId")
                         .HasColumnType("int");
 
-                    b.Property<float>("Score")
-                        .HasColumnType("real");
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
 
-                    b.Property<string>("StudentId")
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsPrivate")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("LessonId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ParentCommentId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserId")
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("AssignmentId");
 
-                    b.HasIndex("StudentId");
+                    b.HasIndex("LessonId");
 
-                    b.ToTable("Grades");
+                    b.HasIndex("ParentCommentId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Comments");
+                });
+
+            modelBuilder.Entity("capyborrowProject.Models.CommentReadStatus", b =>
+                {
+                    b.Property<int>("CommentId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("ReadAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("CommentId", "UserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("CommentReadStatuses");
                 });
 
             modelBuilder.Entity("capyborrowProject.Models.Group", b =>
@@ -335,36 +385,6 @@ namespace capyborrowProject.Migrations
                     b.ToTable("Groups");
                 });
 
-            modelBuilder.Entity("capyborrowProject.Models.JoinTables.GroupSubject", b =>
-                {
-                    b.Property<int>("GroupId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SubjectId")
-                        .HasColumnType("int");
-
-                    b.HasKey("GroupId", "SubjectId");
-
-                    b.HasIndex("SubjectId");
-
-                    b.ToTable("GroupSubjects");
-                });
-
-            modelBuilder.Entity("capyborrowProject.Models.JoinTables.TeacherSubject", b =>
-                {
-                    b.Property<string>("TeacherId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int>("SubjectId")
-                        .HasColumnType("int");
-
-                    b.HasKey("TeacherId", "SubjectId");
-
-                    b.HasIndex("SubjectId");
-
-                    b.ToTable("TeacherSubjects");
-                });
-
             modelBuilder.Entity("capyborrowProject.Models.Lesson", b =>
                 {
                     b.Property<int>("Id")
@@ -379,15 +399,13 @@ namespace capyborrowProject.Migrations
                     b.Property<int?>("GroupId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("LessonTypeId")
-                        .HasColumnType("int");
+                    b.Property<string>("Link")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
 
-                    b.Property<string>("Location")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<int?>("NotificationId")
-                        .HasColumnType("int");
+                    b.Property<string>("Room")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
 
                     b.Property<int?>("SubjectId")
                         .HasColumnType("int");
@@ -395,117 +413,18 @@ namespace capyborrowProject.Migrations
                     b.Property<string>("TeacherId")
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("GroupId");
-
-                    b.HasIndex("LessonTypeId");
 
                     b.HasIndex("SubjectId");
 
                     b.HasIndex("TeacherId");
 
                     b.ToTable("Lessons");
-                });
-
-            modelBuilder.Entity("capyborrowProject.Models.Notification", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("LessonId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Text")
-                        .IsRequired()
-                        .HasMaxLength(300)
-                        .HasColumnType("nvarchar(300)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("LessonId")
-                        .IsUnique()
-                        .HasFilter("[LessonId] IS NOT NULL");
-
-                    b.ToTable("Notifications");
-                });
-
-            modelBuilder.Entity("capyborrowProject.Models.PredefinedTables.AssignmentStatus", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("AssignmentStatuses");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Name = "ToDo"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Name = "InReview"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Name = "PastDue"
-                        },
-                        new
-                        {
-                            Id = 4,
-                            Name = "Marked"
-                        });
-                });
-
-            modelBuilder.Entity("capyborrowProject.Models.PredefinedTables.LessonType", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("LessonTypes");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Name = "Lecture"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Name = "Lab"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Name = "Seminar"
-                        });
                 });
 
             modelBuilder.Entity("capyborrowProject.Models.RefreshToken", b =>
@@ -527,6 +446,30 @@ namespace capyborrowProject.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("RefreshTokens");
+                });
+
+            modelBuilder.Entity("capyborrowProject.Models.StudentAssignment", b =>
+                {
+                    b.Property<string>("StudentId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("AssignmentId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsReturned")
+                        .HasColumnType("bit");
+
+                    b.Property<float?>("Score")
+                        .HasColumnType("real");
+
+                    b.Property<DateTime?>("SubmittedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("StudentId", "AssignmentId");
+
+                    b.HasIndex("AssignmentId");
+
+                    b.ToTable("StudentAssignments");
                 });
 
             modelBuilder.Entity("capyborrowProject.Models.Subject", b =>
@@ -622,78 +565,81 @@ namespace capyborrowProject.Migrations
 
             modelBuilder.Entity("capyborrowProject.Models.Assignment", b =>
                 {
-                    b.HasOne("capyborrowProject.Models.PredefinedTables.AssignmentStatus", "AssignmentStatus")
-                        .WithMany()
-                        .HasForeignKey("AssignmentStatusId");
-
-                    b.HasOne("capyborrowProject.Models.Group", "Group")
-                        .WithMany("Assignments")
-                        .HasForeignKey("GroupId");
-
                     b.HasOne("capyborrowProject.Models.Lesson", "Lesson")
-                        .WithMany()
+                        .WithMany("Assignments")
                         .HasForeignKey("LessonId")
                         .OnDelete(DeleteBehavior.Cascade);
-
-                    b.Navigation("AssignmentStatus");
-
-                    b.Navigation("Group");
 
                     b.Navigation("Lesson");
                 });
 
-            modelBuilder.Entity("capyborrowProject.Models.Grade", b =>
+            modelBuilder.Entity("capyborrowProject.Models.Attendance", b =>
                 {
-                    b.HasOne("capyborrowProject.Models.Assignment", "Assignment")
-                        .WithMany()
-                        .HasForeignKey("AssignmentId");
+                    b.HasOne("capyborrowProject.Models.Lesson", "Lesson")
+                        .WithMany("Attendances")
+                        .HasForeignKey("LessonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("capyborrowProject.Models.Student", "Student")
-                        .WithMany("Grades")
+                        .WithMany("Attendances")
                         .HasForeignKey("StudentId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.Navigation("Assignment");
+                    b.Navigation("Lesson");
 
                     b.Navigation("Student");
                 });
 
-            modelBuilder.Entity("capyborrowProject.Models.JoinTables.GroupSubject", b =>
+            modelBuilder.Entity("capyborrowProject.Models.Comment", b =>
                 {
-                    b.HasOne("capyborrowProject.Models.Group", "Group")
-                        .WithMany("GroupSubjects")
-                        .HasForeignKey("GroupId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.HasOne("capyborrowProject.Models.Assignment", "Assignment")
+                        .WithMany("Comments")
+                        .HasForeignKey("AssignmentId")
+                        .OnDelete(DeleteBehavior.NoAction);
 
-                    b.HasOne("capyborrowProject.Models.Subject", "Subject")
-                        .WithMany("GroupSubjects")
-                        .HasForeignKey("SubjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.HasOne("capyborrowProject.Models.Lesson", "Lesson")
+                        .WithMany("Comments")
+                        .HasForeignKey("LessonId")
+                        .OnDelete(DeleteBehavior.NoAction);
 
-                    b.Navigation("Group");
+                    b.HasOne("capyborrowProject.Models.Comment", "ParentComment")
+                        .WithMany("Replies")
+                        .HasForeignKey("ParentCommentId")
+                        .OnDelete(DeleteBehavior.NoAction);
 
-                    b.Navigation("Subject");
+                    b.HasOne("capyborrowProject.Models.ApplicationUser", "User")
+                        .WithMany("Comments")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("Assignment");
+
+                    b.Navigation("Lesson");
+
+                    b.Navigation("ParentComment");
+
+                    b.Navigation("User");
                 });
 
-            modelBuilder.Entity("capyborrowProject.Models.JoinTables.TeacherSubject", b =>
+            modelBuilder.Entity("capyborrowProject.Models.CommentReadStatus", b =>
                 {
-                    b.HasOne("capyborrowProject.Models.Subject", "Subject")
-                        .WithMany("TeacherSubjects")
-                        .HasForeignKey("SubjectId")
+                    b.HasOne("capyborrowProject.Models.Comment", "Comment")
+                        .WithMany("CommentReadStatuses")
+                        .HasForeignKey("CommentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("capyborrowProject.Models.Teacher", "Teacher")
-                        .WithMany("TeacherSubjects")
-                        .HasForeignKey("TeacherId")
+                    b.HasOne("capyborrowProject.Models.ApplicationUser", "User")
+                        .WithMany("CommentReadStatuses")
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Subject");
+                    b.Navigation("Comment");
 
-                    b.Navigation("Teacher");
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("capyborrowProject.Models.Lesson", b =>
@@ -702,34 +648,21 @@ namespace capyborrowProject.Migrations
                         .WithMany("Lessons")
                         .HasForeignKey("GroupId");
 
-                    b.HasOne("capyborrowProject.Models.PredefinedTables.LessonType", "LessonType")
-                        .WithMany()
-                        .HasForeignKey("LessonTypeId");
-
                     b.HasOne("capyborrowProject.Models.Subject", "Subject")
-                        .WithMany()
-                        .HasForeignKey("SubjectId");
+                        .WithMany("Lessons")
+                        .HasForeignKey("SubjectId")
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("capyborrowProject.Models.Teacher", "Teacher")
                         .WithMany("Lessons")
-                        .HasForeignKey("TeacherId");
+                        .HasForeignKey("TeacherId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Group");
-
-                    b.Navigation("LessonType");
 
                     b.Navigation("Subject");
 
                     b.Navigation("Teacher");
-                });
-
-            modelBuilder.Entity("capyborrowProject.Models.Notification", b =>
-                {
-                    b.HasOne("capyborrowProject.Models.Lesson", "Lesson")
-                        .WithOne("Notification")
-                        .HasForeignKey("capyborrowProject.Models.Notification", "LessonId");
-
-                    b.Navigation("Lesson");
                 });
 
             modelBuilder.Entity("capyborrowProject.Models.RefreshToken", b =>
@@ -741,6 +674,25 @@ namespace capyborrowProject.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("capyborrowProject.Models.StudentAssignment", b =>
+                {
+                    b.HasOne("capyborrowProject.Models.Assignment", "Assignment")
+                        .WithMany("StudentAssignments")
+                        .HasForeignKey("AssignmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("capyborrowProject.Models.Student", "Student")
+                        .WithMany("StudentAssignments")
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Assignment");
+
+                    b.Navigation("Student");
                 });
 
             modelBuilder.Entity("capyborrowProject.Models.Student", b =>
@@ -755,15 +707,29 @@ namespace capyborrowProject.Migrations
 
             modelBuilder.Entity("capyborrowProject.Models.ApplicationUser", b =>
                 {
+                    b.Navigation("CommentReadStatuses");
+
+                    b.Navigation("Comments");
+
                     b.Navigation("RefreshTokens");
+                });
+
+            modelBuilder.Entity("capyborrowProject.Models.Assignment", b =>
+                {
+                    b.Navigation("Comments");
+
+                    b.Navigation("StudentAssignments");
+                });
+
+            modelBuilder.Entity("capyborrowProject.Models.Comment", b =>
+                {
+                    b.Navigation("CommentReadStatuses");
+
+                    b.Navigation("Replies");
                 });
 
             modelBuilder.Entity("capyborrowProject.Models.Group", b =>
                 {
-                    b.Navigation("Assignments");
-
-                    b.Navigation("GroupSubjects");
-
                     b.Navigation("Lessons");
 
                     b.Navigation("Students");
@@ -771,26 +737,28 @@ namespace capyborrowProject.Migrations
 
             modelBuilder.Entity("capyborrowProject.Models.Lesson", b =>
                 {
-                    b.Navigation("Notification");
+                    b.Navigation("Assignments");
+
+                    b.Navigation("Attendances");
+
+                    b.Navigation("Comments");
                 });
 
             modelBuilder.Entity("capyborrowProject.Models.Subject", b =>
                 {
-                    b.Navigation("GroupSubjects");
-
-                    b.Navigation("TeacherSubjects");
+                    b.Navigation("Lessons");
                 });
 
             modelBuilder.Entity("capyborrowProject.Models.Student", b =>
                 {
-                    b.Navigation("Grades");
+                    b.Navigation("Attendances");
+
+                    b.Navigation("StudentAssignments");
                 });
 
             modelBuilder.Entity("capyborrowProject.Models.Teacher", b =>
                 {
                     b.Navigation("Lessons");
-
-                    b.Navigation("TeacherSubjects");
                 });
 #pragma warning restore 612, 618
         }
