@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace capyborrowProject.Models
 {
@@ -11,6 +12,16 @@ namespace capyborrowProject.Models
         public string? Description { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime? DueDate { get; set; }
+        public required bool IsAutomaticallyClosed { get; set; }
+        public bool IsClosed
+        {
+            get
+            {
+                if (IsAutomaticallyClosed == true && DueDate.HasValue && DateTime.Now > DueDate)
+                    return true;
+                return false;
+            }
+        }
         public required float MaxScore { get; set; }
 
         public int? LessonId { get; set; }
