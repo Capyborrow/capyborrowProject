@@ -10,35 +10,31 @@
         public int AssignmentId { get; set; }
         public Assignment Assignment { get; set; } = null!;
 
-        public bool IsReturned { get; set; } = false;
-
         public DateTime? SubmittedAt { get; set; }
 
         public enum AssignmentStatus
         {
-            Pending,      // Очікує виконання
+            Due,          // Очікує виконання
             Overdue,      // Прострочено
             Submitted,    // Здано
             Graded,       // Оцінено
-            Returned,     // Повернено (викладач повернув роботу студенту без оцінки)
+            Expired       // Закрито для здачі
         }
 
         public AssignmentStatus ComputedStatus
         {
             get
             {
-                if (IsReturned)
-                    return AssignmentStatus.Returned;
+                if (Assignment.IsClosed)
+                    return AssignmentStatus.Expired;
                 if (Score.HasValue)
                     return AssignmentStatus.Graded;
                 if (SubmittedAt.HasValue)
                     return AssignmentStatus.Submitted;
-                if (DateTime.UtcNow > Assignment.DueDate)
+                if (Assignment.DueDate.HasValue && DateTime.Now > Assignment.DueDate)
                     return AssignmentStatus.Overdue;
-                return AssignmentStatus.Pending;
+                return AssignmentStatus.Due;
             }
         }
-
-        //Attachments
     }
 }
