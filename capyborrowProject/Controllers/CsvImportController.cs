@@ -24,7 +24,7 @@ public class CsvImportController : ControllerBase
 
     [Route("ImportUsersFromCSV")]
     [HttpPost]
-    public async Task<IActionResult> ImportStudents(IFormFile file)
+    public async Task<IActionResult> ImportUsers(IFormFile file)
     {
         if (file == null || file.Length == 0)
             return BadRequest("Upload a valid CSV file.");
@@ -169,6 +169,63 @@ public class CsvImportController : ControllerBase
         return errors.Count > 0 ? BadRequest(response) : Ok(response);
     }
 
+    [Route("ImportGroupsFromCSV")]
+    [HttpPost]
+    public async Task<IActionResult> ImportGroups(IFormFile file)
+    {
+        if (file == null || file.Length == 0)
+            return BadRequest("Upload a valid CSV file.");
+
+        var errors = new List<string>();
+        var successGroups = new List<string>();
+
+        using var reader = new StreamReader(file.OpenReadStream());
+        using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+        csv.Context.RegisterClassMap<GroupCsvMap>();
+
+        var records = csv.GetRecords<GroupCsvDto>().ToList();
+
+        foreach (var record in records)
+        {
+            var groupId = await _context.Groups
+                .Where(g => g.Name == record.GroupName)
+                .Select(g => g.Id)
+                .FirstOrDefaultAsync();
+
+            if (groupId == 0)
+            {
+                var newGroup = new Group { Name = record.GroupName };
+                _context.Groups.Add(newGroup);
+                await _context.SaveChangesAsync();
+                groupId = newGroup.Id;
+            }
+
+            var student = await _context.Students.FirstOrDefaultAsync(s => s.Email == record.StudentEmail);
+            if (student == null)
+            {
+                errors.Add($"Student with email '{record.StudentEmail}' not found.");
+                continue;
+            }
+
+            student.GroupId = groupId;
+            successGroups.Add($"{record.StudentEmail} -> {record.GroupName}");
+        }
+
+        await _context.SaveChangesAsync();
+
+        var response = new
+        {
+            message = "Import completed.",
+            totalProcessed = records.Count,
+            totalSuccessful = successGroups.Count,
+            totalFailed = errors.Count,
+            successfulEntries = successGroups,
+            errors
+        };
+
+        return errors.Count > 0 ? BadRequest(response) : Ok(response);
+    }
+
     [Route("ImportLessonsFromCSV")]
     [HttpPost]
     public async Task<IActionResult> ImportLessons(IFormFile file)
@@ -220,18 +277,39 @@ public class CsvImportController : ControllerBase
                 continue;
             }
 
+            var isLessonDuplicate = await _context.Lessons.AnyAsync(l => l.Date == lessonDto.Date
+                && l.SubjectId == subjectId
+                && l.TeacherId == teacherId
+                && l.GroupId == groupId);
+
+            if (isLessonDuplicate)
+            {
+                errors.Add($"Duplicate lesson found: Subject '{lessonDto.SubjectName}', Group '{lessonDto.GroupName}', Teacher '{lessonDto.TeacherEmail}' at {lessonDto.Date}.");
+                continue;
+            }
+
+
             if (!Enum.IsDefined(typeof(Lesson.LessonType), lessonDto.Type))
             {
                 errors.Add($"Invalid lesson type '{lessonDto.Type}' for Subject '{lessonDto.SubjectName}'.");
                 continue;
             }
+            var lessonType = (Lesson.LessonType)lessonDto.Type;
+
+            if (!Enum.IsDefined(typeof(Lesson.LessonStatus), lessonDto.Status))
+            {
+                errors.Add($"Invalid lesson status '{lessonDto.Status}' for subject '{lessonDto.SubjectName}'.");
+                continue;
+            }
+            var lessonStatus = (Lesson.LessonStatus)lessonDto.Status;
 
             var lesson = new Lesson
             {
                 Room = lessonDto.Room,
                 Link = lessonDto.Link,
                 Date = lessonDto.Date,
-                Type = (Lesson.LessonType)lessonDto.Type,
+                Type = lessonType,
+                Status = lessonStatus,
                 SubjectId = subjectId,
                 TeacherId = teacherId,
                 GroupId = groupId
@@ -240,7 +318,6 @@ public class CsvImportController : ControllerBase
             _context.Lessons.Add(lesson);
             successLessons.Add($"{lessonDto.SubjectName} at {lessonDto.Room} on {lessonDto.Date}");
         }
-
 
         await _context.SaveChangesAsync();
 
@@ -251,92 +328,6 @@ public class CsvImportController : ControllerBase
             totalSuccessful = successLessons.Count,
             totalFailed = errors.Count,
             successfulLessons = successLessons,
-            errors
-        };
-
-        return errors.Count > 0 ? BadRequest(response) : Ok(response);
-    }
-
-    [Route("ImportGroupsFromCSV")]
-    [HttpPost]
-    public async Task<IActionResult> ImportGroups(IFormFile file)
-    {
-        if (file == null || file.Length == 0)
-            return BadRequest("Upload a valid CSV file.");
-
-        var errors = new List<string>();
-        var successGroups = new List<string>();
-
-        using var reader = new StreamReader(file.OpenReadStream());
-        using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
-        csv.Context.RegisterClassMap<GroupCsvMap>();
-
-        var records = csv.GetRecords<GroupCsvDto>().ToList();
-
-        foreach (var record in records)
-        {
-            var groupId = await _context.Groups
-                .Where(g => g.Name == record.GroupName)
-                .Select(g => g.Id)
-                .FirstOrDefaultAsync();
-
-            if (groupId == 0)
-            {
-                var newGroup = new Group { Name = record.GroupName };
-                _context.Groups.Add(newGroup);
-                await _context.SaveChangesAsync();
-                groupId = newGroup.Id;
-            }
-
-            var student = await _context.Students.FirstOrDefaultAsync(s => s.Email == record.StudentEmail);
-            if (student == null)
-            {
-                errors.Add($"Student with email '{record.StudentEmail}' not found.");
-                continue;
-            }
-
-            if (student.GroupId != groupId)
-            {
-                student.GroupId = groupId;
-                successGroups.Add($"{record.StudentEmail} -> {record.GroupName}");
-            }
-
-            //var group = await _context.Groups
-            //    .Include(g => g.Students)
-            //    .FirstOrDefaultAsync(g => g.Name == record.GroupName);
-
-            //if (group == null)
-            //{
-            //    group = new Group { Name = record.GroupName };
-            //    _context.Groups.Add(group);
-            //    await _context.SaveChangesAsync();
-            //}
-
-            //var student = await _context.Students
-            //    .FirstOrDefaultAsync(s => s.Email == record.StudentEmail);
-
-            //if (student == null)
-            //{
-            //    errors.Add($"Student with email '{record.StudentEmail}' not found.");
-            //    continue;
-            //}
-
-            //if (!group.Students.Contains(student))
-            //{
-            //    group.Students.Add(student);
-            //    successGroups.Add($"{student.Email} -> {group.Name}");
-            //}
-        }
-
-        await _context.SaveChangesAsync();
-
-        var response = new
-        {
-            message = "Import completed.",
-            totalProcessed = records.Count,
-            totalSuccessful = successGroups.Count,
-            totalFailed = errors.Count,
-            successfulEntries = successGroups,
             errors
         };
 
