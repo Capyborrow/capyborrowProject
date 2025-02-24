@@ -12,6 +12,12 @@ namespace capyborrowProject.Models
             Consultation,
             Exam
         }
+        public enum LessonStatus
+        {
+            Scheduled,
+            Cancelled,
+            Postponed
+        }
         public int Id { get; set; }
 
         [MaxLength(10)]
@@ -20,6 +26,7 @@ namespace capyborrowProject.Models
         public string? Link { get; set; }
         public DateTime? Date { get; set; }
         public LessonType Type { get; set; }
+        public LessonStatus Status { get; set; } = LessonStatus.Scheduled;
         public int? SubjectId { get; set; }
         public Subject? Subject { get; set; }
 

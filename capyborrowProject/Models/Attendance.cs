@@ -7,7 +7,8 @@
             Present,
             Absent,
             Excused,
-            Unknown
+            Unknown,
+            Cancelled
         }
         public AttendanceType Type { get; set; }
         public string? StudentId { get; set; }
