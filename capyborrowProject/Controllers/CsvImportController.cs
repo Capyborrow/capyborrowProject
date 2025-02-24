@@ -187,41 +187,60 @@ public class CsvImportController : ControllerBase
 
         foreach (var lessonDto in records)
         {
-            var subject = await _context.Subjects.SingleOrDefaultAsync(s => s.Name == lessonDto.SubjectName);
-            if (subject == null)
+            var subjectId = await _context.Subjects
+                        .Where(s => s.Name == lessonDto.SubjectName)
+                        .Select(s => s.Id)
+                        .FirstOrDefaultAsync();
+
+            if (subjectId == 0)
             {
                 errors.Add($"Subject '{lessonDto.SubjectName}' not found.");
                 continue;
             }
 
-            var teacher = await _context.Teachers.SingleOrDefaultAsync(t => t.Email == lessonDto.TeacherEmail);
-            if (teacher == null)
+            var teacherId = await _context.Teachers
+                .Where(t => t.Email == lessonDto.TeacherEmail)
+                .Select(t => t.Id)
+                .FirstOrDefaultAsync();
+
+            if (teacherId == null)
             {
                 errors.Add($"Teacher with email '{lessonDto.TeacherEmail}' not found.");
                 continue;
             }
 
-            var group = await _context.Groups.SingleOrDefaultAsync(g => g.Name == lessonDto.GroupName);
-            if (group == null)
+            var groupId = await _context.Groups
+                .Where(g => g.Name == lessonDto.GroupName)
+                .Select(g => g.Id)
+                .FirstOrDefaultAsync();
+
+            if (groupId == 0)
             {
                 errors.Add($"Group '{lessonDto.GroupName}' not found.");
                 continue;
             }
 
+            if (!Enum.IsDefined(typeof(Lesson.LessonType), lessonDto.Type))
+            {
+                errors.Add($"Invalid lesson type '{lessonDto.Type}' for Subject '{lessonDto.SubjectName}'.");
+                continue;
+            }
+
             var lesson = new Lesson
             {
-                Location = lessonDto.Location,
+                Room = lessonDto.Room,
+                Link = lessonDto.Link,
                 Date = lessonDto.Date,
                 Type = (Lesson.LessonType)lessonDto.Type,
-                Attendance = (Lesson.AttendanceType)lessonDto.Attendance,
-                Subject = subject,
-                Teacher = teacher,
-                Group = group
+                SubjectId = subjectId,
+                TeacherId = teacherId,
+                GroupId = groupId
             };
 
             _context.Lessons.Add(lesson);
-            successLessons.Add($"{lessonDto.SubjectName} at {lessonDto.Location} on {lessonDto.Date}");
+            successLessons.Add($"{lessonDto.SubjectName} at {lessonDto.Room} on {lessonDto.Date}");
         }
+
 
         await _context.SaveChangesAsync();
 
@@ -256,31 +275,57 @@ public class CsvImportController : ControllerBase
 
         foreach (var record in records)
         {
-            var group = await _context.Groups
-                .Include(g => g.Students)
-                .FirstOrDefaultAsync(g => g.Name == record.GroupName);
+            var groupId = await _context.Groups
+                .Where(g => g.Name == record.GroupName)
+                .Select(g => g.Id)
+                .FirstOrDefaultAsync();
 
-            if (group == null)
+            if (groupId == 0)
             {
-                group = new Group { Name = record.GroupName };
-                _context.Groups.Add(group);
+                var newGroup = new Group { Name = record.GroupName };
+                _context.Groups.Add(newGroup);
                 await _context.SaveChangesAsync();
+                groupId = newGroup.Id;
             }
 
-            var student = await _context.Students
-                .FirstOrDefaultAsync(s => s.Email == record.StudentEmail);
-
+            var student = await _context.Students.FirstOrDefaultAsync(s => s.Email == record.StudentEmail);
             if (student == null)
             {
                 errors.Add($"Student with email '{record.StudentEmail}' not found.");
                 continue;
             }
 
-            if (!group.Students.Contains(student))
+            if (student.GroupId != groupId)
             {
-                group.Students.Add(student);
-                successGroups.Add($"{student.Email} -> {group.Name}");
+                student.GroupId = groupId;
+                successGroups.Add($"{record.StudentEmail} -> {record.GroupName}");
             }
+
+            //var group = await _context.Groups
+            //    .Include(g => g.Students)
+            //    .FirstOrDefaultAsync(g => g.Name == record.GroupName);
+
+            //if (group == null)
+            //{
+            //    group = new Group { Name = record.GroupName };
+            //    _context.Groups.Add(group);
+            //    await _context.SaveChangesAsync();
+            //}
+
+            //var student = await _context.Students
+            //    .FirstOrDefaultAsync(s => s.Email == record.StudentEmail);
+
+            //if (student == null)
+            //{
+            //    errors.Add($"Student with email '{record.StudentEmail}' not found.");
+            //    continue;
+            //}
+
+            //if (!group.Students.Contains(student))
+            //{
+            //    group.Students.Add(student);
+            //    successGroups.Add($"{student.Email} -> {group.Name}");
+            //}
         }
 
         await _context.SaveChangesAsync();
