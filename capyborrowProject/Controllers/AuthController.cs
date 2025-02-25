@@ -205,6 +205,8 @@ namespace capyborrowProject.Controllers
                 .Include(u => u.RefreshTokens)
                 .SingleOrDefaultAsync(u => u.RefreshTokens.Any(rt => rt.Token == refreshToken));
 
+            if (user is null) return Unauthorized(new { Message = "User not found." });
+
             var existingToken = user.RefreshTokens.FirstOrDefault(rt => rt.Token == refreshToken);
 
             if (existingToken != null)
