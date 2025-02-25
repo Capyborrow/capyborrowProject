@@ -16,6 +16,8 @@ namespace capyborrowProject.Models
 
         public string? ProfilePicture { get; set; }
 
+        public string FullName => $"{FirstName} {MiddleName} {LastName}";
+
         public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
         public ICollection<Comment> Comments { get; set; } = new List<Comment>();
         public ICollection<CommentReadStatus> CommentReadStatuses { get; set; } = new List<CommentReadStatus>();
