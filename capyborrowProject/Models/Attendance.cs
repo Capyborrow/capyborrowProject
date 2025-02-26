@@ -1,8 +1,6 @@
 ﻿namespace capyborrowProject.Models
 {
-    public class Attendance
-    {
-        public enum AttendanceType
+    public enum AttendanceType
         {
             Present,
             Absent,
@@ -10,6 +8,9 @@
             Unknown,
             Cancelled
         }
+    public class Attendance
+    {
+        
         public AttendanceType Type { get; set; }
         public string? StudentId { get; set; }
         public Student? Student { get; set; }

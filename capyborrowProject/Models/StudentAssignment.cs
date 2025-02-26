@@ -1,5 +1,13 @@
 ﻿namespace capyborrowProject.Models
 {
+    public enum AssignmentStatus
+    {
+        Due,          // Очікує виконання
+        Overdue,      // Прострочено
+        Submitted,    // Здано
+        Graded,       // Оцінено
+        Expired       // Закрито для здачі
+    }
     public class StudentAssignment
     {
         public float? Score { get; set; }
@@ -12,14 +20,7 @@
 
         public DateTime? SubmittedAt { get; set; }
 
-        public enum AssignmentStatus
-        {
-            Due,          // Очікує виконання
-            Overdue,      // Прострочено
-            Submitted,    // Здано
-            Graded,       // Оцінено
-            Expired       // Закрито для здачі
-        }
+        
 
         public AssignmentStatus ComputedStatus
         {
