@@ -1,16 +1,17 @@
-﻿namespace capyborrowProject.Models
+﻿using System.Text.Json.Serialization;
+
+namespace capyborrowProject.Models
 {
     public enum AttendanceType
-        {
-            Present,
-            Absent,
-            Excused,
-            Unknown,
-            Cancelled
-        }
+    {
+        Attended,
+        Skipped,
+        Excused,
+        Unknown,
+        Cancelled
+    }
     public class Attendance
     {
-        
         public AttendanceType Type { get; set; }
         public string? StudentId { get; set; }
         public Student? Student { get; set; }

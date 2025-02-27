@@ -1,4 +1,6 @@
-﻿namespace capyborrowProject.Models
+﻿using System.Text.Json.Serialization;
+
+namespace capyborrowProject.Models
 {
     public enum AssignmentStatus
     {
@@ -20,12 +22,13 @@
 
         public DateTime? SubmittedAt { get; set; }
 
-        
-
-        public AssignmentStatus ComputedStatus
+        public AssignmentStatus? ComputedStatus
         {
             get
             {
+                Console.WriteLine("NIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIGERZ" + Assignment.DueDate);
+                Console.WriteLine(DateTime.Now);
+
                 if (Assignment.IsClosed)
                     return AssignmentStatus.Expired;
                 if (Score.HasValue)
@@ -34,7 +37,9 @@
                     return AssignmentStatus.Submitted;
                 if (Assignment.DueDate.HasValue && DateTime.Now > Assignment.DueDate)
                     return AssignmentStatus.Overdue;
-                return AssignmentStatus.Due;
+                if (Assignment.DueDate.HasValue && DateTime.Now <= Assignment.DueDate)
+                    return AssignmentStatus.Due;
+                return null;
             }
         }
     }

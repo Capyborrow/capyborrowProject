@@ -6,8 +6,8 @@ namespace capyborrowProject.DTOs
     {
         /*public enum AttendanceType
         {
-            Present,
-            Absent,
+            Attended,
+            Skipped,
             Excused,
             Unknown,
             Cancelled
@@ -21,7 +21,6 @@ namespace capyborrowProject.DTOs
             Graded,      
             Expired       
         }*/
-
         public enum CommentStatusEnum
         {
             Read,
@@ -35,7 +34,7 @@ namespace capyborrowProject.DTOs
             Consultation,
             Exam
         }*/
-        public DateTime Date { get; set; }
+        public required DateTime Date { get; set; }
         public required int Day { get; set; }
         public required int TimeSlot { get; set; }
         public required string SubjectName { get; set; }
@@ -44,8 +43,8 @@ namespace capyborrowProject.DTOs
         public string? Link { get; set; }
         public string? Room { get; set; }
         public required LessonType Type { get; set; }
-        public AttendanceType AttendanceStatus { get; set; }
-        public AssignmentStatus AssignmentStatusEnum { get; set; }
+        public AttendanceType LessonStatus { get; set; }
+        public AssignmentStatus? AssignmentStatus { get; set; }
         public required CommentStatusEnum IsRead { get; set; }
 
     }

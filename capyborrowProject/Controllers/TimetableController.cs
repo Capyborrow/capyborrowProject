@@ -53,7 +53,7 @@ namespace capyborrowProject.Controllers
             var timetable = lessons.Select(l => new TimetableDto
             {
                 Date = l.Date ?? default(DateTime),
-                Day = (l.Date ?? startDate).Subtract(startDate).Days + 1,
+                Day = (l.Date ?? startDate).Subtract(startDate).Days,
                 TimeSlot = GetTimeSlot(l.Date ?? default(DateTime)),
                 SubjectName = l.Subject?.Name ?? "Unknown",
                 TeacherName = l.Teacher != null ? l.Teacher.FirstName + " " + l.Teacher.LastName : "Unknown",
@@ -61,11 +61,12 @@ namespace capyborrowProject.Controllers
                 Link = l.Link,
                 Room = l.Room,
                 Type = (LessonType)l.Type,
-                AttendanceStatus = l.Attendances.FirstOrDefault(a => a.StudentId == student.Id)?.Type ?? AttendanceType.Unknown
+                LessonStatus = l.Attendances.FirstOrDefault(a => a.StudentId == student.Id)?.Type ?? AttendanceType.Unknown
 ,
-                AssignmentStatusEnum = l.Assignments.Select(a => context.StudentAssignments
-                    .FirstOrDefault(sa => sa.AssignmentId == a.Id && sa.StudentId == student.Id)?.ComputedStatus
-                    ?? AssignmentStatus.Due).FirstOrDefault(),
+                AssignmentStatus = l.Assignments
+                    .Select(a => context.StudentAssignments
+                        .FirstOrDefault(sa => sa.AssignmentId == a.Id && sa.StudentId == student.Id)?.ComputedStatus)
+                    .FirstOrDefault(sa => sa.HasValue) ?? null, // Повертаємо null, якщо немає жодного статусу
                 IsRead = l.Comments.Any(c => context.CommentReadStatuses.Any(cr => cr.CommentId == c.Id && cr.UserId == student.Id && cr.IsRead))
                     ? TimetableDto.CommentStatusEnum.Read
                     : TimetableDto.CommentStatusEnum.Unread
@@ -74,18 +75,5 @@ namespace capyborrowProject.Controllers
 
             return Ok(timetable);
         }
-        /*[HttpGet("teacher/{teacherId}")]
-        public async Task<ActionResult<IEnumerable<Lesson>>> GetTeacherTimetable(DateTime startDate, DateTime endDate, string teacherId)
-        {
-            var timetable = await context.Lessons
-                .Include(l => l.Subject)
-                .Include(l => l.Teacher)
-                .Include(l => l.Group)
-                .Include(l => l.Comments)
-                .Where(l => l.Date >= startDate && l.Date <= endDate && l.TeacherId == teacherId)
-                .ToListAsync();
-
-            return timetable is null ? NotFound() : Ok(timetable);
-        }*/
     }
 }
