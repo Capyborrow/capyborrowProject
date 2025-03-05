@@ -1,3 +1,26 @@
+[![SonarQube Cloud](https://sonarcloud.io/images/project_badges/sonarcloud-light.svg)](https://sonarcloud.io/summary/new_code?id=Capyborrow_capyborrowProject)
+
+## Project Quality and Analysis
+
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Capyborrow_capyborrowProject&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=Capyborrow_capyborrowProject)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=Capyborrow_capyborrowProject&metric=bugs)](https://sonarcloud.io/summary/new_code?id=Capyborrow_capyborrowProject)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=Capyborrow_capyborrowProject&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=Capyborrow_capyborrowProject)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=Capyborrow_capyborrowProject&metric=coverage)](https://sonarcloud.io/summary/new_code?id=Capyborrow_capyborrowProject)
+[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=Capyborrow_capyborrowProject&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=Capyborrow_capyborrowProject)
+
+### Ratings
+
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=Capyborrow_capyborrowProject&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=Capyborrow_capyborrowProject)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=Capyborrow_capyborrowProject&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=Capyborrow_capyborrowProject)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=Capyborrow_capyborrowProject&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=Capyborrow_capyborrowProject)
+
+## Repository Information
+
+![GitHub Created At](https://img.shields.io/github/created-at/Capyborrow/capyborrowProject)
+![GitHub Contributors](https://img.shields.io/github/contributors/Capyborrow/capyborrowProject)
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/Capyborrow/capyborrowProject/dotnet-desktop.yml)
+![GitHub Repo Size](https://img.shields.io/github/repo-size/Capyborrow/capyborrowProject)
+
 # Documentation
 
 ## Table of Contents
