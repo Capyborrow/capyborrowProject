@@ -15,7 +15,7 @@ namespace capyborrowProject.Tests.Controllers
     class AuthControllerTests
     {
         [Test]
-        public async Task AuthController_Register_UserExists()
+        public async Task Register_UserExists_BadRequest()
         {
             var fixture = new Fixture().Customize(new AutoMoqCustomization());
             fixture.Behaviors.Add(new OmitOnRecursionBehavior());
@@ -42,7 +42,7 @@ namespace capyborrowProject.Tests.Controllers
         }
 
         [Test]
-        public async Task AuthController_Login_UserNotFound()
+        public async Task Login_UserNotFound_BadRequest()
         {
             var fixture = new Fixture().Customize(new AutoMoqCustomization());
             fixture.Behaviors.Add(new OmitOnRecursionBehavior());
@@ -65,7 +65,7 @@ namespace capyborrowProject.Tests.Controllers
         }
 
         [Test]
-        public async Task AuthController_ForgotPassword_UserNotFound()
+        public async Task ForgotPassword_UserNotFound_BadRequest()
         {
             var fixture = new Fixture().Customize(new AutoMoqCustomization());
             fixture.Behaviors.Add(new OmitOnRecursionBehavior());
@@ -87,7 +87,7 @@ namespace capyborrowProject.Tests.Controllers
         }
 
         [Test]
-        public async Task AuthController_ConfirmEmail_InvalidToken()
+        public async Task ConfirmEmail_InvalidToken_BadRequest()
         {
             var fixture = new Fixture().Customize(new AutoMoqCustomization());
             fixture.Behaviors.Add(new OmitOnRecursionBehavior());
@@ -114,6 +114,55 @@ namespace capyborrowProject.Tests.Controllers
             var result = await sut.ConfirmEmail(request);
 
             Assert.That(result, Is.InstanceOf<BadRequestObjectResult>());
+        }
+
+        [Test]
+        public async Task Register_ValidData_CreatedUser()
+        {
+            var fixture = new Fixture().Customize(new AutoMoqCustomization());
+            fixture.Behaviors.Add(new OmitOnRecursionBehavior());
+
+            string email = "testEmail@ko.ko";
+            var request = fixture.Build<RegisterRequest>()
+                .With(r => r.Email, email)
+                .With(r => r.Role, "Student")
+                .With(r => r.Password, "TestPassword")
+                .Create();
+            var storeMock = new Mock<IUserPasswordStore<ApplicationUser>>();
+            storeMock
+                .Setup(s => s.HasPasswordAsync(It.IsAny<ApplicationUser>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(true);
+            var userManagerMock = new Mock<UserManager<ApplicationUser>>(
+                storeMock.Object, null, null, null, null, null, null, null, null
+            );
+            var user = fixture.Build<ApplicationUser>()
+                .With(x => x.Email, email)
+                .Create();
+            userManagerMock
+                .Setup(um => um.CreateAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>()))
+                .ReturnsAsync(fixture.Create<IdentityResult>());
+            userManagerMock
+                .Setup(um => um.FindByEmailAsync(email))
+                .ReturnsAsync((ApplicationUser?)null);
+            userManagerMock
+                .Setup(um => um.GetRolesAsync(It.IsAny<ApplicationUser>()))
+                .ReturnsAsync(["user", "student"]);
+            userManagerMock
+                .Setup(um => um.GenerateEmailConfirmationTokenAsync(It.IsAny<ApplicationUser>()))
+                .ReturnsAsync("mocked-email-confirmation-token");
+
+            var emailServiceMock = fixture.Create<Mock<EmailService>>();
+
+            emailServiceMock
+                .Setup(es => es.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+                .Returns(Task.CompletedTask);
+
+
+            var sut = GetAuthController(userManager: userManagerMock.Object, emailService: emailServiceMock.Object);
+
+            var result = await sut.Register(request);
+
+            Assert.That(result, Is.InstanceOf<CreatedResult>());
         }
 
         private static AuthController GetAuthController(

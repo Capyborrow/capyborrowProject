@@ -16,7 +16,7 @@ namespace capyborrowProject.Service
             _senderEmail = configuration["AzureEmailCommunicationService:SenderEmail"];
         }
 
-        public async Task SendEmailAsync(string recipientEmail, string subject, string body)
+        public virtual async Task SendEmailAsync(string recipientEmail, string subject, string body)
         {
             var emailClient = new EmailClient(_connectionString);
 
