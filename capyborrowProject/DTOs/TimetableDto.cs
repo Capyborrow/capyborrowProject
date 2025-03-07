@@ -35,8 +35,6 @@ namespace capyborrowProject.DTOs
             Exam
         }*/
         public required DateTime Date { get; set; }
-        public required int Day { get; set; }
-        public required int TimeSlot { get; set; }
         public required string SubjectName { get; set; }
         public required string TeacherName { get; set; }
         public required string TeacherAvatar { get; set; }

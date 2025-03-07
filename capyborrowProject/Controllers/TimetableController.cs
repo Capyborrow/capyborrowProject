@@ -3,7 +3,6 @@ using capyborrowProject.DTOs;
 using capyborrowProject.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace capyborrowProject.Controllers
 {
@@ -18,17 +17,7 @@ namespace capyborrowProject.Controllers
             (new TimeSpan(12, 20, 0),3),
             (new TimeSpan(14, 05, 0), 4)
         };
-        private int GetTimeSlot(DateTime startDateTime)
-        {
-            TimeSpan startTime = startDateTime.TimeOfDay;
-            foreach (var slot in timeSlots)
-            {
-                if (startTime >= slot.Start && startTime < slot.Start + TimeSpan.FromMinutes(90))
-                    return slot.Slot;
-            }
 
-            return -1;
-        }
         [HttpGet("student/{studentId}")]
         public async Task<ActionResult<IEnumerable<TimetableDto>>> GetStudentTimetable(DateTime startDate, DateTime endDate, string studentId)
         {
@@ -53,8 +42,6 @@ namespace capyborrowProject.Controllers
             var timetable = lessons.Select(l => new TimetableDto
             {
                 Date = l.Date ?? default(DateTime),
-                Day = (l.Date ?? startDate).Subtract(startDate).Days,
-                TimeSlot = GetTimeSlot(l.Date ?? default(DateTime)),
                 SubjectName = l.Subject?.Name ?? "Unknown",
                 TeacherName = l.Teacher != null ? l.Teacher.FirstName + " " + l.Teacher.LastName : "Unknown",
                 TeacherAvatar = l.Teacher?.ProfilePicture ?? "",
