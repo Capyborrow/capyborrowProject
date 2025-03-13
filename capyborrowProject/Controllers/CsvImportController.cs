@@ -46,7 +46,7 @@ public class CsvImportController : ControllerBase
                 continue;
             }
 
-            ApplicationUser user = null;
+            ApplicationUser user;
 
             if (userDto.Role.ToLower() == "student")
             {
@@ -70,7 +70,6 @@ public class CsvImportController : ControllerBase
                     UserName = userDto.Email,
                 };
             }
-
             else
             {
                 errors.Add($"Invalid role for {userDto.Email}: {userDto.Role}");
@@ -288,20 +287,27 @@ public class CsvImportController : ControllerBase
                 continue;
             }
 
-
-            if (!Enum.IsDefined(typeof(Lesson.LessonType), lessonDto.Type))
+            if (!Enum.IsDefined(typeof(LessonType), lessonDto.Type))
             {
                 errors.Add($"Invalid lesson type '{lessonDto.Type}' for Subject '{lessonDto.SubjectName}'.");
                 continue;
             }
-            var lessonType = (Lesson.LessonType)lessonDto.Type;
+            if (!Enum.TryParse(lessonDto.Type.ToString(), out LessonType lessonType))
+            {
+                errors.Add($"Failed to parse lesson type '{lessonDto.Type}' for Subject '{lessonDto.SubjectName}'.");
+                continue;
+            }
 
-            if (!Enum.IsDefined(typeof(Lesson.LessonStatus), lessonDto.Status))
+            if (!Enum.IsDefined(typeof(LessonStatus), lessonDto.Status))
             {
                 errors.Add($"Invalid lesson status '{lessonDto.Status}' for subject '{lessonDto.SubjectName}'.");
                 continue;
             }
-            var lessonStatus = (Lesson.LessonStatus)lessonDto.Status;
+            if (!Enum.TryParse(lessonDto.Status.ToString(), out LessonStatus lessonStatus))
+            {
+                errors.Add($"Failed to parse lesson status '{lessonDto.Status}' for Subject '{lessonDto.SubjectName}'.");
+                continue;
+            }
 
             var lesson = new Lesson
             {
