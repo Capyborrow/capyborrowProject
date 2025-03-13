@@ -334,6 +334,91 @@ public class CsvImportController : ControllerBase
         return errors.Count > 0 ? BadRequest(response) : Ok(response);
     }
 
-}
+    [Route("ImportAssignmentsFromCSV")]
+    [HttpPost]
+    public async Task<IActionResult> ImportAssignments(IFormFile file)
+    {
+        if (file == null || file.Length == 0)
+            return BadRequest("Upload a valid CSV file.");
+
+        var errors = new List<string>();
+        var successAssignments = new List<string>();
+
+        using var reader = new StreamReader(file.OpenReadStream());
+        using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+        csv.Context.RegisterClassMap<AssignmentsCsvMap>();
+
+        var records = csv.GetRecords<AssignmentsCsvDto>().ToList();
+
+        foreach (var assignmentDto in records)
+        {
+            var lesson = await _context.Lessons
+                .Include(l => l.Group)
+                .ThenInclude(g => g.Students)
+                .FirstOrDefaultAsync(l => l.Teacher!.Email == assignmentDto.TeacherEmail && l.Date.HasValue && l.Date.Value == assignmentDto.LessonDate);
+
+            if (lesson == null)
+            {
+                errors.Add($"Lesson not found for Teacher: {assignmentDto.TeacherEmail} on {assignmentDto.LessonDate}");
+                continue;
+            }
+
+            if (lesson.Group == null)
+            {
+                errors.Add($"No group associated with lesson {lesson.Id}");
+                continue;
+            }
+
+            var assignment = new Assignment
+            {
+                Name = assignmentDto.Name,
+                Description = assignmentDto.Description,
+                CreatedDate = DateTime.Now,
+                DueDate = assignmentDto.DueDate,
+                IsAutomaticallyClosed = assignmentDto.IsAutomaticallyClosed,
+                MaxScore = assignmentDto.MaxScore,
+                LessonId = lesson.Id
+            };
+
+            _context.Assignments.Add(assignment);
+            _context.SaveChanges();
+
+            var groupStudents = lesson.Group.Students.ToList();
+            var studentAssignments = new List<StudentAssignment>();
+
+            foreach (var student in groupStudents)
+            {
+                var studentAssignment = new StudentAssignment
+                {
+                    Score = assignmentDto.Score,
+                    StudentId = student.Id,
+                    AssignmentId = assignment.Id,
+                    SubmittedAt = assignmentDto.SubmittedAt
+                };
+
+                studentAssignments.Add(studentAssignment);
+            }
+
+            _context.StudentAssignments.AddRange(studentAssignments);
+            _context.SaveChanges();
+
+            successAssignments.Add($"Assignment '{assignment.Name}' created with {studentAssignments.Count} students.");
+        }
+
+        await _context.SaveChangesAsync();
+
+        var response = new
+        {
+            message = "Import completed.",
+            totalProcessed = records.Count,
+            totalSuccessful = successAssignments.Count,
+            totalFailed = errors.Count,
+            successfulLessons = successAssignments,
+            errors
+        };
+
+        return errors.Count > 0 ? BadRequest(response) : Ok(response);
+    }
+}   
 
 
