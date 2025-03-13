@@ -26,7 +26,6 @@ namespace capyborrowProject.Models
         {
             get
             {
-                Console.WriteLine("NIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIGERZ" + Assignment.DueDate);
                 Console.WriteLine(DateTime.Now);
 
                 if (Assignment.IsClosed)
