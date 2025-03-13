@@ -1,23 +1,25 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace capyborrowProject.Models
 {
+    public enum LessonType
+    {
+        Lecture,
+        Practice,
+        Seminar,
+        Consultation,
+        Exam
+    }
+    public enum LessonStatus
+    {
+        Scheduled,
+        Cancelled,
+        Postponed
+    }
     public class Lesson
     {
-        public enum LessonType
-        {
-            Lecture,
-            Practice,
-            Seminar,
-            Consultation,
-            Exam
-        }
-        public enum LessonStatus
-        {
-            Scheduled,
-            Cancelled,
-            Postponed
-        }
+        
         public int Id { get; set; }
 
         [MaxLength(10)]
