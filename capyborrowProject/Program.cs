@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Identity;
 using capyborrowProject.Models.AuthModels;
 using capyborrowProject.Extensions;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Http.Features;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -43,6 +44,12 @@ builder.Services.Configure<IdentityOptions>(options =>
 });
 
 builder.Services.AddSingleton<EmailService>();
+builder.Services.AddSingleton<BlobStorageService>();
+
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 50 * 1024 * 1024; 
+});
 
 
 builder.Services.AddCors(options =>
