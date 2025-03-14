@@ -18,6 +18,8 @@ namespace capyborrowProject.Data
         public DbSet<Comment> Comments { get; set; }
         public DbSet<CommentReadStatus> CommentReadStatuses { get; set; }
         public DbSet<Attendance> Attendances { get; set; }
+        public DbSet<AssignmentFile> AssignmentFiles { get; set; }
+        public DbSet<SubmissionFile> SubmissionFiles { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -144,6 +146,20 @@ namespace capyborrowProject.Data
                 .HasOne(a => a.Lesson)
                 .WithMany(l => l.Assignments)
                 .HasForeignKey(a => a.LessonId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Assignment-AssignmentFile (One-to-Many)
+            modelBuilder.Entity<AssignmentFile>()
+                .HasOne(af => af.Assignment)
+                .WithMany(a => a.AssignmentFiles)
+                .HasForeignKey(af => af.AssignmentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // StudentAssignment-SubmissionFile (One-to-Many)
+            modelBuilder.Entity<SubmissionFile>()
+                .HasOne(sf => sf.StudentAssignment)
+                .WithMany(sa => sa.SubmissionFiles)
+                .HasForeignKey(sf => new { sf.StudentId, sf.AssignmentId })
                 .OnDelete(DeleteBehavior.Cascade);
         }
     }
