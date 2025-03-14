@@ -1,6 +1,6 @@
 ﻿using capyborrowProject.Data;
-using capyborrowProject.DTOs;
 using capyborrowProject.Models;
+using capyborrowProject.Models.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
