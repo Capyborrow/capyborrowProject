@@ -41,5 +41,7 @@ namespace capyborrowProject.Models
                 return null;
             }
         }
+
+        public ICollection<SubmissionFile> SubmissionFiles { get; set; } = new List<SubmissionFile>();
     }
 }

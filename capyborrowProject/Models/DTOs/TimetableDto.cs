@@ -1,6 +1,6 @@
 ﻿using capyborrowProject.Models;
 
-namespace capyborrowProject.DTOs
+namespace capyborrowProject.Models.DTOs
 {
     public class TimetableDto
     {

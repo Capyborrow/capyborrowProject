@@ -29,5 +29,6 @@ namespace capyborrowProject.Models
 
         public ICollection<StudentAssignment> StudentAssignments { get; set; } = new List<StudentAssignment>();
         public ICollection<Comment> Comments { get; set; } = new List<Comment>();
+        public ICollection<AssignmentFile> AssignmentFiles { get; set; } = new List<AssignmentFile>();
     }
 }
