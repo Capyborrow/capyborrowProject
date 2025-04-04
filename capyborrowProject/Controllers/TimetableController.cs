@@ -41,6 +41,7 @@ namespace capyborrowProject.Controllers
 
             var timetable = lessons.Select(l => new TimetableDto
             {
+                Id = l.Id,
                 Date = l.Date ?? default(DateTime),
                 SubjectName = l.Subject?.Name ?? "Unknown",
                 TeacherName = l.Teacher != null ? l.Teacher.FirstName + " " + l.Teacher.LastName : "Unknown",
