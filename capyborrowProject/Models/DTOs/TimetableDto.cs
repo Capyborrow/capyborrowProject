@@ -4,6 +4,7 @@ namespace capyborrowProject.Models.DTOs
 {
     public class TimetableDto
     {
+        public int Id { get; set; }
         /*public enum AttendanceType
         {
             Attended,
