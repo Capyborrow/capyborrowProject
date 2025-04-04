@@ -62,11 +62,32 @@ namespace capyborrowProject.Controllers
             return Ok(submissionFile);
         }
 
-        [HttpGet("download/{fileName}")]
-        public async Task<IActionResult> DownloadFile(string fileName)
+        [HttpGet("download/{fileType}/{fileId}")]
+        public async Task<IActionResult> DownloadFile(string fileType, int fileId)
         {
             try
             {
+                var fileName = string.Empty;
+
+                if (fileType.Equals("submission", StringComparison.OrdinalIgnoreCase))
+                {
+                    fileName = await context.SubmissionFiles
+                        .Where(sf => sf.Id == fileId)
+                        .Select(sf => sf.FileName)
+                        .FirstOrDefaultAsync();
+                }
+                else if (fileType.Equals("assignment", StringComparison.OrdinalIgnoreCase))
+                {
+                    fileName = await context.AssignmentFiles
+                        .Where(af => af.Id == fileId)
+                        .Select(af => af.FileName)
+                        .FirstOrDefaultAsync();
+                }
+                else
+                {
+                    return BadRequest(new { Message = "Invalid file type" });
+                }
+
                 var fileStream = await blobStorageService.DownloadFileAsync(fileName);
                 var contentType = "application/octet-stream";
                 return File(fileStream, contentType, fileName);
@@ -133,19 +154,19 @@ namespace capyborrowProject.Controllers
             }
         }
 
-        [HttpGet("assignmentFiles/{assignmentId}")]
+        [HttpGet("getAssignmentFilesForAssignment/{assignmentId}")]
         public async Task<ActionResult<IEnumerable<AssignmentFile>>> GetAssignmentFilesByAssignmentId(int assignmentId)
         {
             return await context.AssignmentFiles.Where(af => af.AssignmentId == assignmentId).ToListAsync();
         }
 
-        [HttpGet("submissionFiles/byStudent/{studentId}")]
+        [HttpGet("getStudentSubmissionFiles/{studentId}")]
         public async Task<ActionResult<IEnumerable<SubmissionFile>>> GetSubmissionFilesByStudentId(string studentId)
         {
             return await context.SubmissionFiles.Where(sf => sf.StudentId == studentId).ToListAsync();
         }
 
-        [HttpGet("submissionFiles/byAssignment/{assignmentId}")]
+        [HttpGet("getAllSubmissionFilesForAssignment/{assignmentId}")]
         public async Task<ActionResult<IEnumerable<SubmissionFile>>> GetSubmissionFilesByAssignmentId(int assignmentId)
         {
             return await context.SubmissionFiles.Where(sf => sf.AssignmentId == assignmentId).ToListAsync();
