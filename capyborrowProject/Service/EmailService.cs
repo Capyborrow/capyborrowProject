@@ -5,16 +5,10 @@ using System.Threading.Tasks;
 
 namespace capyborrowProject.Service
 {
-    public class EmailService
+    public class EmailService(IConfiguration configuration)
     {
-        private readonly string _connectionString;
-        private readonly string _senderEmail;
-
-        public EmailService(IConfiguration configuration)
-        {
-            _connectionString = configuration["AzureEmailCommunicationService:ConnectionString"];
-            _senderEmail = configuration["AzureEmailCommunicationService:SenderEmail"];
-        }
+        private readonly string _connectionString = configuration["AzureEmailCommunicationService:ConnectionString"]!;
+        private readonly string _senderEmail = configuration["AzureEmailCommunicationService:SenderEmail"]!;
 
         public async Task SendEmailAsync(string recipientEmail, string subject, string body)
         {

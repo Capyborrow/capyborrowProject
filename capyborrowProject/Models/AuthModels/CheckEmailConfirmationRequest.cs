@@ -6,6 +6,6 @@ namespace capyborrowProject.Models.AuthModels
     {
         [Required]
         [EmailAddress (ErrorMessage = "Email is required")]
-        public string Email { get; set; }
+        public required string Email { get; set; }
     }
 }
