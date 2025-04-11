@@ -17,7 +17,6 @@ namespace capyborrowProject.Controllers
             (new TimeSpan(12, 20, 0),3),
             (new TimeSpan(14, 05, 0), 4)
         };
-
         [HttpGet("student/{studentId}")]
         public async Task<ActionResult<IEnumerable<TimetableDto>>> GetStudentTimetable(DateTime startDate, DateTime endDate, string studentId)
         {
@@ -29,36 +28,49 @@ namespace capyborrowProject.Controllers
             {
                 return NotFound("Student or group not found");
             }
-
             var lessons = await context.Lessons
                 .Where(l => l.GroupId == student.Group.Id && l.Date >= startDate && l.Date <= endDate)
                 .Include(l => l.Subject)
                 .Include(l => l.Teacher)
-                .Include(l => l.Assignments)
                 .Include(l => l.Attendances)
-                .Include(l => l.Comments)
+                .Include(l => l.Assignments)
                 .ToListAsync();
-
-            var timetable = lessons.Select(l => new TimetableDto
+            var assignmentIds = lessons.SelectMany(l => l.Assignments.Select(a => a.Id))
+                                       .Distinct()
+                                       .ToList();
+            var studentAssignments = await context.StudentAssignments
+                .Where(sa => sa.StudentId == student.Id && assignmentIds.Contains(sa.AssignmentId))
+                .ToListAsync();
+            var studentAssignmentLookup = studentAssignments.ToLookup(sa => sa.AssignmentId, sa => sa.ComputedStatus);
+            var timetable = lessons.Select(l =>
             {
-                Id = l.Id,
-                Date = l.Date ?? default(DateTime),
-                SubjectName = l.Subject?.Name ?? "Unknown",
-                TeacherName = l.Teacher != null ? l.Teacher.FirstName + " " + l.Teacher.LastName : "Unknown",
-                TeacherAvatar = l.Teacher?.ProfilePicture ?? "",
-                Link = l.Link,
-                Room = l.Room,
-                Type = (LessonType)l.Type,
-                LessonStatus = l.Attendances.FirstOrDefault(a => a.StudentId == student.Id)?.Type ?? AttendanceType.Unknown
-,
-                AssignmentStatus = l.Assignments
-                    .Select(a => context.StudentAssignments
-                        .FirstOrDefault(sa => sa.AssignmentId == a.Id && sa.StudentId == student.Id)?.ComputedStatus)
-                    .FirstOrDefault(sa => sa.HasValue) ?? null, // Повертаємо null, якщо немає жодного статусу
-                IsRead = l.Comments.Any(c => context.CommentReadStatuses.Any(cr => cr.CommentId == c.Id && cr.UserId == student.Id && cr.IsRead))
-                    ? TimetableDto.CommentStatusEnum.Read
-                    : TimetableDto.CommentStatusEnum.Unread
+                AssignmentStatus? assignmentStatus = null;
+                foreach (var assignment in l.Assignments)
+                {
+                    assignmentStatus = studentAssignmentLookup[assignment.Id]
+                        .FirstOrDefault(cs => cs.HasValue);
+                    if (assignmentStatus.HasValue)
+                    {
+                        break;
+                    }
+                }
+                var attendance = l.Attendances.FirstOrDefault(a => a.StudentId == student.Id);
+                var lessonStatus = attendance != null ? attendance.Type : AttendanceType.Unknown;
 
+                return new TimetableDto
+                {
+                    Id = l.Id,
+                    Date = l.Date ?? default(DateTime),
+                    SubjectName = l.Subject?.Name ?? "Unknown",
+                    TeacherName = l.Teacher != null ? $"{l.Teacher.FirstName} {l.Teacher.LastName}" : "Unknown",
+                    TeacherAvatar = l.Teacher?.ProfilePicture ?? "",
+                    Link = l.Link,
+                    Room = l.Room,
+                    Type = (LessonType)l.Type,
+                    LessonStatus = lessonStatus,
+                    AssignmentStatus = assignmentStatus,
+                    IsRead = TimetableDto.CommentStatusEnum.Unread
+                };
             }).ToList();
 
             return Ok(timetable);
