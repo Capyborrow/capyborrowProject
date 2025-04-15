@@ -69,7 +69,6 @@ namespace capyborrowProject.Controllers
                     Type = (LessonType)l.Type,
                     LessonStatus = lessonStatus,
                     AssignmentStatus = assignmentStatus,
-                    IsRead = TimetableDto.CommentStatusEnum.Unread
                 };
             }).ToList();
 
