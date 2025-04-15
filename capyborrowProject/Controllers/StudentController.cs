@@ -20,7 +20,6 @@ namespace capyborrowProject.Controllers
                 .Include(s => s.Group)
                 .Include(s => s.StudentAssignments)
                 .Include(s => s.Attendances)
-                .Include(s => s.Comments)
                 .ToListAsync();
 
             return Ok(students);
@@ -33,7 +32,6 @@ namespace capyborrowProject.Controllers
                 .Include(s => s.Group)
                 .Include(s => s.StudentAssignments)
                 .Include(s => s.Attendances)
-                .Include(s => s.Comments)
                 .FirstOrDefaultAsync(s => s.Id == id);
             
             return student is null ? NotFound() : Ok(student);

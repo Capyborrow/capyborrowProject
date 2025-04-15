@@ -36,7 +36,6 @@ namespace capyborrowProject.Controllers
                 .Include(l => l.Teacher)
                 .Include(l => l.Assignments)
                 .Include(l => l.Attendances)
-                .Include(l => l.Comments)
                 .ToListAsync();
 
             var timetable = lessons.Select(l => new TimetableDto
@@ -55,10 +54,6 @@ namespace capyborrowProject.Controllers
                     .Select(a => context.StudentAssignments
                         .FirstOrDefault(sa => sa.AssignmentId == a.Id && sa.StudentId == student.Id)?.ComputedStatus)
                     .FirstOrDefault(sa => sa.HasValue) ?? null, // Повертаємо null, якщо немає жодного статусу
-                IsRead = l.Comments.Any(c => context.CommentReadStatuses.Any(cr => cr.CommentId == c.Id && cr.UserId == student.Id && cr.IsRead))
-                    ? TimetableDto.CommentStatusEnum.Read
-                    : TimetableDto.CommentStatusEnum.Unread
-
             }).ToList();
 
             return Ok(timetable);

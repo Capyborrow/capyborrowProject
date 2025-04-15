@@ -57,7 +57,6 @@ namespace capyborrowProject.Controllers
             var lesson = await context.Lessons
                 .Include(l => l.Assignments)
                 .Include(l => l.Subject)
-                .Include(l => l.Comments)
                 .Include(l => l.Teacher)
                 .Include(l => l.Group)
                 .FirstOrDefaultAsync(l => l.Id == id);

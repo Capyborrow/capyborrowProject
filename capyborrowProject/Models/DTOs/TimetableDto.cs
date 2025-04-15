@@ -44,7 +44,5 @@ namespace capyborrowProject.Models.DTOs
         public required LessonType Type { get; set; }
         public AttendanceType LessonStatus { get; set; }
         public AssignmentStatus? AssignmentStatus { get; set; }
-        public required CommentStatusEnum IsRead { get; set; }
-
     }
 }
