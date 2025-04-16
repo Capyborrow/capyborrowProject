@@ -44,9 +44,9 @@ namespace capyborrowProject.Controllers
             if (await _userManager.FindByEmailAsync(request.Email) != null)
                 return BadRequest(new { message = "A user with this email already exists." });
 
-            ApplicationUser user = null;
+            ApplicationUser user;
 
-            if (request.Role.ToLower() == "student")
+            if (request.Role.Equals("student", StringComparison.CurrentCultureIgnoreCase))
             {
                 user = new Student
                 {
@@ -57,7 +57,7 @@ namespace capyborrowProject.Controllers
                     UserName = request.Email
                 };
             }
-            else if (request.Role.ToLower() == "teacher")
+            else if (request.Role.Equals("teacher", StringComparison.CurrentCultureIgnoreCase))
             {
                 user = new Teacher
                 {
@@ -83,8 +83,8 @@ namespace capyborrowProject.Controllers
 
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.NameIdentifier, user.Id),
-                new Claim(ClaimTypes.Email, user.Email),
+                new(ClaimTypes.NameIdentifier, user.Id),
+                new(ClaimTypes.Email, user.Email),
             };
 
             var roles = await _userManager.GetRolesAsync(user);

@@ -15,8 +15,6 @@ namespace capyborrowProject.Data
         public DbSet<Lesson> Lessons { get; set; }
         public DbSet<Assignment> Assignments { get; set; }
         public DbSet<StudentAssignment> StudentAssignments { get; set; }
-        public DbSet<Comment> Comments { get; set; }
-        public DbSet<CommentReadStatus> CommentReadStatuses { get; set; }
         public DbSet<Attendance> Attendances { get; set; }
         public DbSet<AssignmentFile> AssignmentFiles { get; set; }
         public DbSet<SubmissionFile> SubmissionFiles { get; set; }
@@ -96,50 +94,6 @@ namespace capyborrowProject.Data
                 .WithMany(t => t.Lessons)
                 .HasForeignKey(l => l.TeacherId)
                 .OnDelete(DeleteBehavior.SetNull);
-
-            // Comment-Lesson (Many-to-One)
-            modelBuilder.Entity<Comment>()
-                .HasOne(c => c.Lesson)
-                .WithMany(l => l.Comments)
-                .HasForeignKey(c => c.LessonId)
-                .OnDelete(DeleteBehavior.NoAction);
-
-            // Comment-User (Many-to-One)
-            modelBuilder.Entity<Comment>()
-                .HasOne(c => c.User)
-                .WithMany(u => u.Comments)
-                .HasForeignKey(c => c.UserId)
-                .OnDelete(DeleteBehavior.NoAction);
-
-            // Comment-Assignment (Many-to-One)
-            modelBuilder.Entity<Comment>()
-                .HasOne(c => c.Assignment)
-                .WithMany(a => a.Comments)
-                .HasForeignKey(c => c.AssignmentId)
-                .OnDelete(DeleteBehavior.NoAction);
-
-            // Reply relationship
-            modelBuilder.Entity<Comment>()
-                .HasOne(c => c.ParentComment)
-                .WithMany(c => c.Replies)
-                .HasForeignKey(c => c.ParentCommentId)
-                .OnDelete(DeleteBehavior.NoAction);
-
-            // Composite primary key for CommentReadStatus
-            modelBuilder.Entity<CommentReadStatus>()
-                .HasKey(crs => new { crs.CommentId, crs.UserId });
-
-            // Comment-CommentReadStatus (One-to-Many)
-            modelBuilder.Entity<CommentReadStatus>()
-                .HasOne(crs => crs.Comment)
-                .WithMany(c => c.CommentReadStatuses)
-                .HasForeignKey(crs => crs.CommentId);
-
-            // User-CommentReadStatus (One-to-Many)
-            modelBuilder.Entity<CommentReadStatus>()
-                .HasOne(crs => crs.User)
-                .WithMany(u => u.CommentReadStatuses)
-                .HasForeignKey(crs => crs.UserId);
 
             // Assignment-Lesson (Many-to-One)
             modelBuilder.Entity<Assignment>()

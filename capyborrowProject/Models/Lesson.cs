@@ -38,7 +38,6 @@ namespace capyborrowProject.Models
         public int? GroupId { get; set; }
         public Group? Group { get; set; }
         public ICollection<Assignment> Assignments { get; set; } = new List<Assignment>();
-        public ICollection<Comment> Comments { get; set; } = new List<Comment>();
         public ICollection<Attendance> Attendances { get; set; } = new List<Attendance>();
     }
 }
