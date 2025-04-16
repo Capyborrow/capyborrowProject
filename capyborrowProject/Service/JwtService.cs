@@ -8,14 +8,9 @@ using System.Text;
 
 namespace capyborrowProject.Service
 {
-    public class JwtService
+    public class JwtService(IConfiguration configuration)
     {
-        private readonly JwtSettings _jwtSettings;
-
-        public JwtService(IConfiguration configuration)
-        {
-            _jwtSettings = configuration.GetSection("Jwt").Get<JwtSettings>();
-        }
+        private readonly JwtSettings _jwtSettings = configuration.GetSection("Jwt").Get<JwtSettings>()!;
 
         public string GenerateAccessToken(IEnumerable<Claim> claims)
         {
