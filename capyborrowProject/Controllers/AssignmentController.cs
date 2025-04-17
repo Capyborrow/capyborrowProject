@@ -41,7 +41,7 @@ namespace capyborrowProject.Controllers
                 foreach (var file in createAssignmentDto.AssignmentFiles)
                 {
                     using var stream = file.OpenReadStream();
-                    var fileUrl = await blobStorageService.UploadFileAsync(stream, file.FileName, file.ContentType ?? "application/octet-stream");
+                    var fileUrl = await blobStorageService.UploadFileAsync(stream, file.FileName, "assignment", file.ContentType ?? "application/octet-stream");
 
                     assignment.AssignmentFiles.Add(new AssignmentFile
                     {
