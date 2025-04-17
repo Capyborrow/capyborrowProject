@@ -10,7 +10,7 @@ namespace capyborrowProject.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class AssignmentController (ApplicationDbContext context, BlobStorageService blobStorageService) : ControllerBase
+    public class AssignmentController(ApplicationDbContext context, BlobStorageService blobStorageService) : ControllerBase
     {
         [HttpPost("CreateAssignmentForLesson")]
         public async Task<IActionResult> CreateAssignmentForLesson(CreateAssignmentDto createAssignmentDto)
@@ -87,6 +87,42 @@ namespace capyborrowProject.Controllers
             {
                 Message = "Assignment created successfully",
                 AssignmentId = assignment.Id,
+            });
+        }
+
+        [HttpPut("SubmitAssignment/{studentId}/{assignmentId}")]
+        public async Task<IActionResult> SubmitStudentAssignment(string studentId, int assignmentId)
+        {
+            var studentAssignment = await context.StudentAssignments.FirstOrDefaultAsync(sa => sa.StudentId == studentId && sa.AssignmentId == assignmentId);
+
+            if (studentAssignment is null)
+                return NotFound("Student assignment not found");
+
+            studentAssignment.SubmittedAt = DateTime.Now;
+            await context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                Message = "Assignment submitted successfully",
+                StudentAssignmentId = studentAssignment.AssignmentId,
+            });
+        }
+
+        [HttpPut("CancelAssignmentSubmission/{studentId}/{assignmentId}")]
+        public async Task<IActionResult> CancelAssignmentSubmission(string studentId, int assignmentId)
+        {
+            var studentAssignment = await context.StudentAssignments.FirstOrDefaultAsync(sa => sa.StudentId == studentId && sa.AssignmentId == assignmentId);
+
+            if (studentAssignment is null)
+                return NotFound("Student assignment not found");
+
+            studentAssignment.SubmittedAt = null;
+            await context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                Message = "Assignment submission cancelled successfully",
+                StudentAssignmentId = studentAssignment.AssignmentId,
             });
         }
     }
