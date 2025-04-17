@@ -18,7 +18,7 @@ namespace capyborrowProject.Data
         public DbSet<Attendance> Attendances { get; set; }
         public DbSet<AssignmentFile> AssignmentFiles { get; set; }
         public DbSet<SubmissionFile> SubmissionFiles { get; set; }
-
+        public DbSet<LessonsChange> LessonsChanges { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -115,6 +115,79 @@ namespace capyborrowProject.Data
                 .WithMany(sa => sa.SubmissionFiles)
                 .HasForeignKey(sf => new { sf.StudentId, sf.AssignmentId })
                 .OnDelete(DeleteBehavior.Cascade);
+
+            //Auxiliary table for Azure Search logic
+            modelBuilder.Entity<LessonsChange>().ToTable("LessonsChanges", t => t.ExcludeFromMigrations());
+
+            modelBuilder.Entity<LessonsChange>(b =>
+            {
+                b.ToTable("LessonsChanges");
+                b.HasKey(x => x.LessonId);
+                b.Property(x => x.LessonId)
+                 .ValueGeneratedNever();
+            });
+
+        }
+        public override async Task<int> SaveChangesAsync(CancellationToken ct = default)
+        {
+            var now = DateTime.UtcNow;
+
+            var addedLessons = ChangeTracker.Entries<Lesson>()
+                                      .Where(e => e.State == EntityState.Added)
+                                      .Select(e => e.Entity)
+                                      .ToList();
+            var modifiedLessons = ChangeTracker.Entries<Lesson>()
+                                      .Where(e => e.State == EntityState.Modified)
+                                      .Select(e => e.Entity)
+                                      .ToList();
+            var deletedIds = ChangeTracker.Entries<Lesson>()
+                                      .Where(e => e.State == EntityState.Deleted)
+                                      .Select(e => e.Entity.Id)
+                                      .ToList();
+
+            var result = await base.SaveChangesAsync(ct);
+
+            foreach (var lesson in addedLessons.Concat(modifiedLessons))
+            {
+                var existing = await LessonsChanges.FindAsync(lesson.Id);
+                if (existing != null)
+                {
+                    existing.LastModified = now;
+                    existing.IsDeleted = false;
+                }
+                else
+                {
+                    LessonsChanges.Add(new LessonsChange
+                    {
+                        LessonId = lesson.Id,
+                        LastModified = now,
+                        IsDeleted = false
+                    });
+                }
+            }
+            foreach (var id in deletedIds)
+            {
+                var existing = await LessonsChanges.FindAsync(id);
+                if (existing != null)
+                {
+                    existing.LastModified = now;
+                    existing.IsDeleted = true;
+                }
+                else
+                {
+                    LessonsChanges.Add(new LessonsChange
+                    {
+                        LessonId = id,
+                        LastModified = now,
+                        IsDeleted = true
+                    });
+                }
+            }
+
+            await base.SaveChangesAsync(ct);
+
+            return result;
         }
     }
 }
+
