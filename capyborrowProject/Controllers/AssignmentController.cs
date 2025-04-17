@@ -4,91 +4,90 @@ using Microsoft.EntityFrameworkCore;
 using capyborrowProject.Models;
 using capyborrowProject.Data;
 using capyborrowProject.Service;
+using capyborrowProject.Models.DTOs;
 
 namespace capyborrowProject.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class AssignmentController (ApplicationDbContext context) : ControllerBase
+    public class AssignmentController (ApplicationDbContext context, BlobStorageService blobStorageService) : ControllerBase
     {
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Assignment>> GetAssignment(int id)
+        [HttpPost("CreateAssignmentForLesson")]
+        public async Task<IActionResult> CreateAssignmentForLesson(CreateAssignmentDto createAssignmentDto)
         {
-            var assignment = await context.Assignments
-                .Include(a => a.Lesson)
-                .FirstOrDefaultAsync(a => a.Id == id);
+            var lesson = await context.Lessons
+                .Include(l => l.Group)
+                    .ThenInclude(g => g.Students)
+                .FirstOrDefaultAsync(l => l.Id == createAssignmentDto.LessonId);
 
-            return assignment is null ? NotFound() : Ok(assignment);
-        }
+            if (lesson is null)
+                return NotFound("Lesson not found");
 
-        [HttpPost]
-        public async Task<ActionResult<Assignment>> CreateAssignment(Assignment assignment)
-        {
-            if (assignment is null)
+            var assignment = new Assignment
             {
-                return BadRequest(new { message = "Invalid assignment data." });
+                Name = createAssignmentDto.Name,
+                Description = createAssignmentDto.Description,
+                CreatedDate = DateTime.Now,
+                DueDate = createAssignmentDto.DueDate,
+                IsAutomaticallyClosed = createAssignmentDto.IsAutomaticallyClosed,
+                MaxScore = createAssignmentDto.MaxScore,
+                IsSubmittable = createAssignmentDto.IsSubmittable,
+                LessonId = createAssignmentDto.LessonId,
+                Lesson = lesson
+            };
+
+            if (createAssignmentDto.AssignmentFiles is not null && createAssignmentDto.AssignmentFiles.Count != 0)
+            {
+                foreach (var file in createAssignmentDto.AssignmentFiles)
+                {
+                    using var stream = file.OpenReadStream();
+                    var fileUrl = await blobStorageService.UploadFileAsync(stream, file.FileName, file.ContentType ?? "application/octet-stream");
+
+                    assignment.AssignmentFiles.Add(new AssignmentFile
+                    {
+                        FileUrl = fileUrl,
+                        FileName = file.FileName,
+                    });
+                }
             }
 
-            context.Assignments.Add(assignment);
+            await context.Assignments.AddAsync(assignment);
             await context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetAssignment), new { id = assignment.Id }, assignment);
-        }
-
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateAssignment(int id, Assignment updatedAssignment)
-        {
-            if (id != updatedAssignment.Id)
+            if (createAssignmentDto.IsSubmittable)
             {
-                return BadRequest(new { message = "Assignment ID mismatch." });
-            }
+                List<string> studentIdsToAssign;
 
-            var existingAssignment = await context.Assignments.FindAsync(id);
+                if (createAssignmentDto.StudentIds is not null && createAssignmentDto.StudentIds.Count != 0)
+                {
+                    studentIdsToAssign = createAssignmentDto.StudentIds;
+                }
+                else
+                {
+                    if (lesson.Group is null)
+                        return BadRequest("Group not found");
 
-            if (existingAssignment is null)
-            {
-                return NotFound();
-            }
+                    if (lesson.Group.Students is null || lesson.Group.Students.Count == 0)
+                        return BadRequest("No students in group");
 
-            existingAssignment.Name = updatedAssignment.Name;
-            existingAssignment.Description = updatedAssignment.Description;
-            existingAssignment.DueDate = updatedAssignment.DueDate;
-            existingAssignment.LessonId = updatedAssignment.LessonId;
-            context.Entry(existingAssignment).State = EntityState.Modified;
-            try
-            {
+                    studentIdsToAssign = [.. lesson.Group.Students.Select(s => s.Id)];
+                }
+
+                var studentAssignments = studentIdsToAssign.Select(studentId => new StudentAssignment
+                {
+                    StudentId = studentId,
+                    AssignmentId = assignment.Id
+                });
+
+                await context.StudentAssignments.AddRangeAsync(studentAssignments);
                 await context.SaveChangesAsync();
             }
-            catch (DbUpdateConcurrencyException)
+
+            return Ok(new
             {
-                return StatusCode(500, new { message = "Error updating assignment." });
-            }
-
-            return NoContent();
-        }
-
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteAssignment(int id)
-        {
-            var existingAssignment = await context.Assignments.FindAsync(id);
-
-            if (existingAssignment is null)
-            {
-                return NotFound();
-            }
-
-            context.Assignments.Remove(existingAssignment);
-
-            try
-            {
-                await context.SaveChangesAsync();
-            }
-            catch (DbUpdateException)
-            {
-                return StatusCode(500, new { message = "Error deleting the assignment." });
-            }
-
-            return NoContent();
+                Message = "Assignment created successfully",
+                AssignmentId = assignment.Id,
+            });
         }
     }
 }
