@@ -7,6 +7,7 @@
         public string? Description { get; set; }
         public DateTime CreatedDate { get; set; }
         public float MaxScore { get; set; }
+        public bool IsSubmittable { get; set; }
         public List<AssignmentFileDto> Attachments { get; set; } = [];
         public StudentAssignmentDto? StudentAssignment { get; set; }
     }
