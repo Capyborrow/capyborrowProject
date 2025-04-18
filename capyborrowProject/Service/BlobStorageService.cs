@@ -8,6 +8,7 @@ namespace capyborrowProject.Service
         private readonly BlobServiceClient _blobServiceClient = new(configuration["AzureBlobStorage:ConnectionString"]);
         private readonly string _assignmentFilesContainerName = configuration["AzureBlobStorage:AssignmentFilesContainerName"]!;
         private readonly string _submissionFilesContainerName = configuration["AzureBlobStorage:SubmissionFilesContainerName"]!;
+        private readonly string _profilePicturesContainerName = configuration["AzureBlobStorage:ProfilePicturesContainerName"]!;
 
         public async Task<string> UploadFileAsync(Stream fileStream, string fileName, string fileType, string contentType)
         {
@@ -16,6 +17,19 @@ namespace capyborrowProject.Service
 
             var blobClient = blobContainerClient.GetBlobClient(fileName);
             await blobClient.UploadAsync(fileStream, new BlobHttpHeaders { ContentType = contentType });
+
+            return blobClient.Uri.ToString();
+        }
+
+        public async Task<string> UploadProfilePictureAsync(IFormFile file, string userId)
+        {
+            var blobContainerClient = _blobServiceClient.GetBlobContainerClient(_profilePicturesContainerName);
+            await blobContainerClient.CreateIfNotExistsAsync(PublicAccessType.Blob);
+
+            var blobClient = blobContainerClient.GetBlobClient($"{userId}/{Guid.NewGuid()}_{file.Name}");
+
+            using var stream = file.OpenReadStream();
+            await blobClient.UploadAsync(stream, new BlobHttpHeaders { ContentType = file.ContentType });
 
             return blobClient.Uri.ToString();
         }
