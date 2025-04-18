@@ -86,6 +86,8 @@ namespace capyborrowProject.Controllers
                 {
                     Score = sa.Score,
                     StudentName = sa.Student != null ? $"{sa.Student.FirstName} {sa.Student.LastName}" : null,
+                    StudentId = sa.Student?.Id,
+                    StudentAvatar = sa.Student?.ProfilePicture,
                     SubmittedAt = sa.SubmittedAt,
                     Status = sa.ComputedStatus,
                     Submissions = sa.SubmissionFiles.Select(sf => new SubmissionFileDto
