@@ -98,5 +98,36 @@ namespace capyborrowProject.Controllers
 
             return Ok(timetable);
         }
+        [HttpGet("teacher/{teacherId}")]
+        public async Task<ActionResult<IEnumerable<TeacherTimetableDto>>> GetTeacherTimetable(DateTime startDate, DateTime endDate, string teacherId)
+        {
+            var teacher = await context.Teachers
+                .FirstOrDefaultAsync(t => t.Id == teacherId);
+
+            if (teacher == null)
+            {
+                return NotFound("Teacher not found");
+            }
+
+            var lessons = await context.Lessons
+                .Where(l => l.TeacherId == teacher.Id && l.Date >= startDate && l.Date <= endDate)
+                .Include(l => l.Subject)
+                .Include(l => l.Group)
+                .ToListAsync();
+
+            var timetable = lessons.Select(l => new TeacherTimetableDto
+            {
+                Id = l.Id,
+                Date = l.Date ?? default(DateTime),
+                SubjectName = l.Subject?.Name ?? "Unknown",
+                GroupName = l.Group?.Name ?? "Unknown",
+                Link = l.Link,
+                Room = l.Room,
+                Type = l.Type,
+                LessonStatus = l.Status
+            }).ToList();
+
+            return Ok(timetable);
+        }
     }
 }
