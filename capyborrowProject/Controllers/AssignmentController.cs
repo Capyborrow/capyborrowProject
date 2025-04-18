@@ -176,5 +176,28 @@ namespace capyborrowProject.Controllers
                 Status = currentStatus
             });
         }
+        [HttpPost("GradeStudentAssigment")]
+        public async Task<IActionResult> GradeStudentAssigment(GradeStudentAssigmentDto gradeStudentAssigmentDto)
+        {
+            var studentAssignment = await context.StudentAssignments
+                .Include(sa => sa.Assignment)
+                .FirstOrDefaultAsync(sa =>
+                    sa.StudentId == gradeStudentAssigmentDto.StudentId &&
+                    sa.AssignmentId == gradeStudentAssigmentDto.AssignmentId);
+
+            if (studentAssignment == null)
+            {
+                return NotFound("StudentAssignment not found");
+            }
+            if (gradeStudentAssigmentDto.Score < 0 || gradeStudentAssigmentDto.Score > studentAssignment.Assignment.MaxScore)
+            {
+                return BadRequest($"Score must be between 0 and {studentAssignment.Assignment.MaxScore}");
+            }
+
+            studentAssignment.Score = gradeStudentAssigmentDto.Score;
+            await context.SaveChangesAsync();
+
+            return Ok("Score updated");
+        }
     }
 }
