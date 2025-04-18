@@ -13,7 +13,7 @@ namespace capyborrowProject.Controllers
     public class AssignmentController(ApplicationDbContext context, BlobStorageService blobStorageService) : ControllerBase
     {
         [HttpPost("CreateAssignmentForLesson")]
-        public async Task<IActionResult> CreateAssignmentForLesson(CreateAssignmentDto createAssignmentDto)
+        public async Task<IActionResult> CreateAssignmentForLesson([FromForm] CreateAssignmentDto createAssignmentDto)
         {
             var lesson = await context.Lessons
                 .Include(l => l.Group)

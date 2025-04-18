@@ -10,7 +10,7 @@ namespace capyborrowProject.Controllers
     [ApiController]
     public class GroupController(ApplicationDbContext context) : ControllerBase
     {
-        [HttpGet("GetStudentsInGroup")]
+        [HttpGet("GetStudentsInGroupForLesson/{lessonId}")]
         public async Task<ActionResult<IEnumerable<AssignedStudentDto>>> GetStudentsInGroupForAssignment(int lessonId)
         {
             var lesson = await context.Lessons
