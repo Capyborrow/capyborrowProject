@@ -132,9 +132,11 @@ namespace capyborrowProject.Controllers
         }
 
         [HttpPut("SubmitAssignment/{studentId}/{assignmentId}")]
-        public async Task<IActionResult> SubmitStudentAssignment(string studentId, int assignmentId)
+        public async Task<ActionResult<AssignmentStatus>> SubmitStudentAssignment(string studentId, int assignmentId)
         {
-            var studentAssignment = await context.StudentAssignments.FirstOrDefaultAsync(sa => sa.StudentId == studentId && sa.AssignmentId == assignmentId);
+            var studentAssignment = await context.StudentAssignments
+                .Include(sa => sa.Assignment)
+                .FirstOrDefaultAsync(sa => sa.StudentId == studentId && sa.AssignmentId == assignmentId);
 
             if (studentAssignment is null)
                 return NotFound("Student assignment not found");
@@ -142,17 +144,22 @@ namespace capyborrowProject.Controllers
             studentAssignment.SubmittedAt = DateTime.Now;
             await context.SaveChangesAsync();
 
+            var currentStatus = studentAssignment.ComputedStatus;
+
             return Ok(new
             {
                 Message = "Assignment submitted successfully",
                 StudentAssignmentId = studentAssignment.AssignmentId,
+                Status = currentStatus
             });
         }
 
         [HttpPut("CancelAssignmentSubmission/{studentId}/{assignmentId}")]
-        public async Task<IActionResult> CancelAssignmentSubmission(string studentId, int assignmentId)
+        public async Task<ActionResult<AssignmentStatus>> CancelAssignmentSubmission(string studentId, int assignmentId)
         {
-            var studentAssignment = await context.StudentAssignments.FirstOrDefaultAsync(sa => sa.StudentId == studentId && sa.AssignmentId == assignmentId);
+            var studentAssignment = await context.StudentAssignments
+                .Include(sa => sa.Assignment)
+                .FirstOrDefaultAsync(sa => sa.StudentId == studentId && sa.AssignmentId == assignmentId);
 
             if (studentAssignment is null)
                 return NotFound("Student assignment not found");
@@ -160,10 +167,13 @@ namespace capyborrowProject.Controllers
             studentAssignment.SubmittedAt = null;
             await context.SaveChangesAsync();
 
+            var currentStatus = studentAssignment.ComputedStatus;
+
             return Ok(new
             {
                 Message = "Assignment submission cancelled successfully",
                 StudentAssignmentId = studentAssignment.AssignmentId,
+                Status = currentStatus
             });
         }
     }
