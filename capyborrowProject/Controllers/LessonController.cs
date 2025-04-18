@@ -56,5 +56,48 @@ namespace capyborrowProject.Controllers
 
             return Ok(filteredAssignments);
         }
+        [HttpGet("getAssignmentsWithSubmissionsForLesson/{lessonId}")]
+        public async Task<ActionResult<IEnumerable<AssignmentTeacherDto>>> GetAssignmentsWithSubmissionsForLesson(int lessonId)
+        {
+            var assignments = await context.Assignments
+                .Where(a => a.LessonId == lessonId)
+                .Include(a => a.AssignmentFiles)
+                .Include(a => a.StudentAssignments)
+                    .ThenInclude(sa => sa.SubmissionFiles)
+                .Include(a => a.StudentAssignments)
+                    .ThenInclude(sa => sa.Student)
+                .ToListAsync();
+
+            var result = assignments.Select(a => new AssignmentTeacherDto
+            {
+                Id = a.Id,
+                Name = a.Name,
+                Description = a.Description,
+                CreatedDate = a.CreatedDate,
+                MaxScore = a.MaxScore,
+                IsSubmittable = a.IsSubmittable,
+                Attachments = a.AssignmentFiles.Select(af => new AssignmentFileDto
+                {
+                    Id = af.Id,
+                    FileName = af.FileName,
+                    FileUrl = af.FileUrl
+                }).ToList(),
+                StudentSubmissions = a.StudentAssignments.Select(sa => new StudentAssignmentForTeacherDto
+                {
+                    Score = sa.Score,
+                    StudentName = sa.Student != null ? $"{sa.Student.FirstName} {sa.Student.LastName}" : null,
+                    SubmittedAt = sa.SubmittedAt,
+                    Status = sa.ComputedStatus,
+                    Submissions = sa.SubmissionFiles.Select(sf => new SubmissionFileDto
+                    {
+                        Id = sf.Id,
+                        FileName = sf.FileName,
+                        FileUrl = sf.FileUrl
+                    }).ToList()
+                }).ToList()
+            });
+
+            return Ok(result);
+        }
     }
 }
