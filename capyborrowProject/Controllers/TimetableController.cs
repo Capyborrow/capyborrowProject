@@ -17,6 +17,19 @@ namespace capyborrowProject.Controllers
             (new TimeSpan(12, 20, 0),3),
             (new TimeSpan(14, 05, 0), 4)
         };
+        private static int GetAssignmentStatusPriority(AssignmentStatus status)
+        {
+            return status switch
+            {
+                AssignmentStatus.Expired => 0,
+                AssignmentStatus.Overdue => 1,
+                AssignmentStatus.Due => 2,
+                AssignmentStatus.Submitted => 3,
+                AssignmentStatus.Graded => 4,
+                _ => int.MaxValue
+            };
+        }
+
         [HttpGet("student/{studentId}")]
         public async Task<ActionResult<IEnumerable<TimetableDto>>> GetStudentTimetable(DateTime startDate, DateTime endDate, string studentId)
         {
@@ -45,14 +58,25 @@ namespace capyborrowProject.Controllers
             var timetable = lessons.Select(l =>
             {
                 AssignmentStatus? assignmentStatus = null;
+                int bestPriority = int.MaxValue;
+
                 foreach (var assignment in l.Assignments)
                 {
-                    assignmentStatus = studentAssignmentLookup[assignment.Id]
-                        .FirstOrDefault(cs => cs.HasValue);
-                    if (assignmentStatus.HasValue)
+                    if (!studentAssignmentLookup.Contains(assignment.Id)) continue;
+
+                    foreach (var status in studentAssignmentLookup[assignment.Id].Where(s => s.HasValue).Select(s => s.Value))
                     {
-                        break;
+                        int priority = GetAssignmentStatusPriority(status);
+                        if (priority < bestPriority)
+                        {
+                            bestPriority = priority;
+                            assignmentStatus = status;
+
+                            if (priority == 0) break;
+                        }
                     }
+
+                    if (bestPriority == 0) break;
                 }
                 var attendance = l.Attendances.FirstOrDefault(a => a.StudentId == student.Id);
                 var lessonStatus = attendance != null ? attendance.Type : AttendanceType.Unknown;
