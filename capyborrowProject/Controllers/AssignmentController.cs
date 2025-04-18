@@ -36,19 +36,22 @@ namespace capyborrowProject.Controllers
                 Lesson = lesson
             };
 
-            if (createAssignmentDto.AssignmentFiles is not null && createAssignmentDto.AssignmentFiles.Count != 0)
+            if (createAssignmentDto.AssignmentFiles?.Count > 0)
             {
-                foreach (var file in createAssignmentDto.AssignmentFiles)
+                var fileUploadTasks = createAssignmentDto.AssignmentFiles.Select(async file =>
                 {
-                    using var stream = file.OpenReadStream();
+                    await using var stream = file.OpenReadStream();
                     var fileUrl = await blobStorageService.UploadFileAsync(stream, file.FileName, "assignment", file.ContentType ?? "application/octet-stream");
 
-                    assignment.AssignmentFiles.Add(new AssignmentFile
+                    return new AssignmentFile
                     {
                         FileUrl = fileUrl,
-                        FileName = file.FileName,
-                    });
-                }
+                        FileName = file.FileName
+                    };
+                });
+
+                var uploadedFiles = await Task.WhenAll(fileUploadTasks);
+                assignment.AssignmentFiles = [.. uploadedFiles];
             }
 
             await context.Assignments.AddAsync(assignment);
@@ -87,6 +90,44 @@ namespace capyborrowProject.Controllers
             {
                 Message = "Assignment created successfully",
                 AssignmentId = assignment.Id,
+            });
+        }
+
+        [HttpDelete("DeleteAssignment/{assignmentId}")]
+        public async Task<IActionResult> DeleteAssignment(int assignmentId)
+        {
+            var assignment = await context.Assignments
+                    .Include(a => a.AssignmentFiles)
+                    .Include(a => a.StudentAssignments)
+                        .ThenInclude(s => s.SubmissionFiles)
+                    .FirstOrDefaultAsync(a => a.Id == assignmentId);
+
+            if (assignment is null)
+                return NotFound("Assignment not found");
+
+            foreach (var file in assignment.AssignmentFiles)
+            {
+                await blobStorageService.DeleteFileAsync(file.FileName, "assignment");
+            }
+
+            foreach (var sa in assignment.StudentAssignments)
+            {
+                if (sa.SubmissionFiles is not null)
+                {
+                    foreach (var sf in sa.SubmissionFiles)
+                    {
+                        await blobStorageService.DeleteFileAsync(sf.FileName, "submission");
+                    }
+                }
+            }
+
+            context.Assignments.Remove(assignment);
+            await context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                Message = "Assignment and related files deleted successfully",
+                AssignmentId = assignmentId
             });
         }
 
