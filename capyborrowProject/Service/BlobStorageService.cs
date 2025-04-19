@@ -34,6 +34,20 @@ namespace capyborrowProject.Service
             return blobClient.Uri.ToString();
         }
 
+        public async Task<bool> DeleteProfilePictureAsync(string profilePictureUrl)
+        {
+            if (string.IsNullOrEmpty(profilePictureUrl) || !Uri.TryCreate(profilePictureUrl, UriKind.Absolute, out var uri))
+                return false;
+
+            var blobContainerClient = _blobServiceClient.GetBlobContainerClient(_profilePicturesContainerName);
+
+            var blobName = string.Join("/", uri.Segments.Skip(2).Select(s => s.Trim('/')));
+
+            var blobClient = blobContainerClient.GetBlobClient(blobName);
+
+            return await blobClient.DeleteIfExistsAsync();
+        }
+
         public async Task<Stream?> DownloadFileAsync(string fileName, string fileType)
         {
             var blobContainerClient = _blobServiceClient.GetBlobContainerClient(fileType == "assignment" ? _assignmentFilesContainerName : _submissionFilesContainerName);
@@ -51,7 +65,9 @@ namespace capyborrowProject.Service
         public async Task<bool> DeleteFileAsync(string fileName, string fileType)
         {
             var blobContainerClient = _blobServiceClient.GetBlobContainerClient(fileType == "assignment" ? _assignmentFilesContainerName : _submissionFilesContainerName);
+            
             var blobClient = blobContainerClient.GetBlobClient(fileName);
+
             return await blobClient.DeleteIfExistsAsync();
         }
     }
