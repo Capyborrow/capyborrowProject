@@ -38,6 +38,8 @@ namespace capyborrowProject.Models
                     return AssignmentStatus.Overdue;
                 if (Assignment.DueDate.HasValue && DateTime.Now <= Assignment.DueDate)
                     return AssignmentStatus.Due;
+                if (Assignment.DueDate is null && Assignment.IsSubmittable && !Assignment.IsClosed && SubmittedAt is null)
+                    return AssignmentStatus.Due;
                 return null;
             }
         }

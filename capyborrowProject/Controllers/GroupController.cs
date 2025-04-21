@@ -1,5 +1,6 @@
 ﻿using capyborrowProject.Data;
-using capyborrowProject.Models;
+using capyborrowProject.Models.DTOs;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,85 +10,28 @@ namespace capyborrowProject.Controllers
     [ApiController]
     public class GroupController(ApplicationDbContext context) : ControllerBase
     {
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Group>>> GetAllGroups()
+        [HttpGet("GetStudentsInGroupForLesson/{lessonId}")]
+        public async Task<ActionResult<IEnumerable<AssignedStudentDto>>> GetStudentsInGroupForAssignment(int lessonId)
         {
-            var groups = await context.Groups
-                .Include(g => g.Students)
-                .Include(g => g.Lessons)
-                .ToListAsync();
+            var lesson = await context.Lessons
+                .Include(l => l.Group)
+                    .ThenInclude(g => g.Students)
+                .FirstOrDefaultAsync(l => l.Id == lessonId);
 
-            return Ok(groups);
-        }
+            if (lesson is null)
+                return NotFound("Lesson not found");
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Group>> GetGroup(int id)
-        {
-            var group = await context.Groups
-                .Include(g => g.Students)
-                .Include(g => g.Lessons)
-                .FirstOrDefaultAsync(g => g.Id == id);
+            if (lesson.Group is null || lesson.Group.Students is null)
+                return NotFound("Group or students not found");
 
-            return group is null ? NotFound() : Ok(group);
-        }
-
-        [HttpPost]
-        public async Task<ActionResult<Group>> CreateGroup(Group group)
-        {
-            if (group is null)
+            var students = lesson.Group.Students.Select(s => new AssignedStudentDto
             {
-                return BadRequest(new { message = "Invalid group data." });
-            }
+                Id = s.Id,
+                FullName = s.MiddleName is null ? $"{s.FirstName} {s.LastName}" : $"{s.FirstName} {s.MiddleName} {s.LastName}",
+                ProfilePicture = s.ProfilePicture
+            });
 
-            context.Groups.Add(group);
-            await context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetGroup), new { id = group.Id }, group);
-        }
-
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateGroup(int id, Group updatedGroup)
-        {
-            if (id != updatedGroup.Id)
-            {
-                return BadRequest(new { message = "Group ID mismatch." });
-            }
-
-            var existingGroup = await context.Groups.FindAsync(id);
-            if (existingGroup is null)
-            {
-                return NotFound();
-            }
-
-            existingGroup.Name = updatedGroup.Name;
-
-            context.Entry(existingGroup).State = EntityState.Modified;
-
-            try
-            {
-                await context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                return StatusCode(500, new { message = "Error updating group." });
-            }
-
-            return NoContent();
-        }
-
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteGroup(int id)
-        {
-            var group = await context.Groups.FindAsync(id);
-            if (group is null)
-            {
-                return NotFound();
-            }
-
-            context.Groups.Remove(group);
-            await context.SaveChangesAsync();
-
-            return NoContent();
+            return Ok(students);
         }
     }
 }

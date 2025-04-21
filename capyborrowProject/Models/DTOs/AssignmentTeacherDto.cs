@@ -1,6 +1,6 @@
 ﻿namespace capyborrowProject.Models.DTOs
 {
-    public class AssignmentDto
+    public class AssignmentTeacherDto
     {
         public int Id { get; set; }
         public string Name { get; set; }
@@ -9,6 +9,6 @@
         public float MaxScore { get; set; }
         public bool IsSubmittable { get; set; }
         public List<AssignmentFileDto> Attachments { get; set; } = [];
-        public StudentAssignmentDto? StudentAssignment { get; set; }
+        public List<StudentAssignmentForTeacherDto> StudentSubmissions { get; set; } = [];
     }
 }

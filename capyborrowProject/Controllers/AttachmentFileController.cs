@@ -21,7 +21,7 @@ namespace capyborrowProject.Controllers
                 return NotFound("Assignment not found.");
 
             using var stream = file.OpenReadStream();
-            var fileUrl = await blobStorageService.UploadFileAsync(stream, file.FileName, file.ContentType);
+            var fileUrl = await blobStorageService.UploadFileAsync(stream, file.FileName, "assignment", file.ContentType);
 
             var assignmentFile = new AssignmentFile
             {
@@ -46,7 +46,7 @@ namespace capyborrowProject.Controllers
                 return NotFound("Student assignment not found.");
 
             using var stream = file.OpenReadStream();
-            var fileUrl = await blobStorageService.UploadFileAsync(stream, file.FileName, file.ContentType);
+            var fileUrl = await blobStorageService.UploadFileAsync(stream, file.FileName, "submission", file.ContentType);
 
             var submissionFile = new SubmissionFile
             {
@@ -88,7 +88,14 @@ namespace capyborrowProject.Controllers
                     return BadRequest(new { Message = "Invalid file type" });
                 }
 
-                var fileStream = await blobStorageService.DownloadFileAsync(fileName);
+                if (string.IsNullOrEmpty(fileName))
+                    return NotFound(new { Message = "File not found" });
+
+                var fileStream = await blobStorageService.DownloadFileAsync(fileName, fileType);
+                
+                if (fileStream is null)
+                    return NotFound(new { Message = "File not found in Blob Storage" });
+
                 var contentType = "application/octet-stream";
                 return File(fileStream, contentType, fileName);
             }
@@ -111,15 +118,11 @@ namespace capyborrowProject.Controllers
                 {
                     var submissionFile = await context.SubmissionFiles.FirstOrDefaultAsync(sf => sf.Id == fileId);
                     if (submissionFile is null)
-                    {
                         return NotFound(new { Message = "Submission file not found" });
-                    }
 
-                    bool isDeletedFromStorage = await blobStorageService.DeleteFileAsync(submissionFile.FileName);
+                    bool isDeletedFromStorage = await blobStorageService.DeleteFileAsync(submissionFile.FileName, fileType);
                     if (!isDeletedFromStorage)
-                    {
                         return NotFound(new { Message = "File not found in Blob Storage" });
-                    }
 
                     context.SubmissionFiles.Remove(submissionFile);
                     await context.SaveChangesAsync();
@@ -130,15 +133,11 @@ namespace capyborrowProject.Controllers
                 {
                     var assignmentFile = await context.AssignmentFiles.FirstOrDefaultAsync(af => af.Id == fileId);
                     if (assignmentFile is null)
-                    {
                         return NotFound(new { Message = "Assignment file not found" });
-                    }
 
-                    bool isDeletedFromStorage = await blobStorageService.DeleteFileAsync(assignmentFile.FileName);
+                    bool isDeletedFromStorage = await blobStorageService.DeleteFileAsync(assignmentFile.FileName, fileType);
                     if (!isDeletedFromStorage)
-                    {
                         return NotFound(new { Message = "File not found in Blob Storage" });
-                    }
 
                     context.AssignmentFiles.Remove(assignmentFile);
                     await context.SaveChangesAsync();
@@ -152,24 +151,6 @@ namespace capyborrowProject.Controllers
             {
                 return StatusCode(500, new { Message = "Internal Server Error", Error = ex.Message });
             }
-        }
-
-        [HttpGet("getAssignmentFilesForAssignment/{assignmentId}")]
-        public async Task<ActionResult<IEnumerable<AssignmentFile>>> GetAssignmentFilesByAssignmentId(int assignmentId)
-        {
-            return await context.AssignmentFiles.Where(af => af.AssignmentId == assignmentId).ToListAsync();
-        }
-
-        [HttpGet("getStudentSubmissionFiles/{studentId}")]
-        public async Task<ActionResult<IEnumerable<SubmissionFile>>> GetSubmissionFilesByStudentId(string studentId)
-        {
-            return await context.SubmissionFiles.Where(sf => sf.StudentId == studentId).ToListAsync();
-        }
-
-        [HttpGet("getAllSubmissionFilesForAssignment/{assignmentId}")]
-        public async Task<ActionResult<IEnumerable<SubmissionFile>>> GetSubmissionFilesByAssignmentId(int assignmentId)
-        {
-            return await context.SubmissionFiles.Where(sf => sf.AssignmentId == assignmentId).ToListAsync();
         }
     }
 }

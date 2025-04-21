@@ -23,6 +23,7 @@ namespace capyborrowProject.Models
             }
         }
         public required float MaxScore { get; set; }
+        public bool IsSubmittable { get; set; } = true;
 
         public int? LessonId { get; set; }
         public Lesson Lesson { get; set; } = null!;

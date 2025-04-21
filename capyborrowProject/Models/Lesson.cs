@@ -19,7 +19,6 @@ namespace capyborrowProject.Models
     }
     public class Lesson
     {
-        
         public int Id { get; set; }
 
         [MaxLength(10)]

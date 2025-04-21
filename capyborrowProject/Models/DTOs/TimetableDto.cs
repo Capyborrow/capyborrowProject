@@ -22,11 +22,6 @@ namespace capyborrowProject.Models.DTOs
             Graded,      
             Expired       
         }*/
-        public enum CommentStatusEnum
-        {
-            Read,
-            Unread
-        }
         /*public enum LessonType
         {
             Lecture,
