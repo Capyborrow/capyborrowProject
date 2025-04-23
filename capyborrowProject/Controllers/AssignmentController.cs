@@ -93,6 +93,84 @@ namespace capyborrowProject.Controllers
             });
         }
 
+        [HttpPost("CreateAssignmentWithPreupload")]
+        public async Task<IActionResult> CreateAssignmentForLessonWithPreload([FromForm] CreateAssignmentWithTempFilesDto createAssignmentDto)
+        {
+            var lesson = await context.Lessons
+                .Include(l => l.Group)
+                    .ThenInclude(g => g.Students)
+                .FirstOrDefaultAsync(l => l.Id == createAssignmentDto.LessonId);
+
+            if (lesson is null)
+                return NotFound("Lesson not found");
+
+            var assignment = new Assignment
+            {
+                Name = createAssignmentDto.Name,
+                Description = createAssignmentDto.Description,
+                CreatedDate = DateTime.Now,
+                DueDate = createAssignmentDto.DueDate,
+                IsAutomaticallyClosed = createAssignmentDto.IsAutomaticallyClosed,
+                MaxScore = createAssignmentDto.MaxScore,
+                IsSubmittable = createAssignmentDto.IsSubmittable,
+                LessonId = createAssignmentDto.LessonId,
+                Lesson = lesson
+            };
+
+            if (createAssignmentDto.TempFileIds?.Count > 0)
+            {
+                var tempFiles = await context.TempAssignmentFiles
+                    .Where(f => createAssignmentDto.TempFileIds.Contains(f.Id))
+                    .ToListAsync();
+
+                assignment.AssignmentFiles = [.. tempFiles.Select(temp => new AssignmentFile
+                {
+                    FileName = temp.FileName,
+                    FileUrl = temp.FileUrl
+                })];
+
+                context.TempAssignmentFiles.RemoveRange(tempFiles);
+            }
+
+            await context.Assignments.AddAsync(assignment);
+            await context.SaveChangesAsync();
+
+            if (createAssignmentDto.IsSubmittable)
+            {
+                List<string> studentIdsToAssign;
+
+                if (createAssignmentDto.StudentIds is not null && createAssignmentDto.StudentIds.Count != 0)
+                {
+                    studentIdsToAssign = createAssignmentDto.StudentIds;
+                }
+                else
+                {
+                    if (lesson.Group is null)
+                        return BadRequest("Group not found");
+
+                    if (lesson.Group.Students is null || lesson.Group.Students.Count == 0)
+                        return BadRequest("No students in group");
+
+                    studentIdsToAssign = [.. lesson.Group.Students.Select(s => s.Id)];
+                }
+
+                var studentAssignments = studentIdsToAssign.Select(studentId => new StudentAssignment
+                {
+                    StudentId = studentId,
+                    AssignmentId = assignment.Id
+                });
+
+                await context.StudentAssignments.AddRangeAsync(studentAssignments);
+                await context.SaveChangesAsync();
+            }
+
+            return Ok(new
+            {
+                Message = "Assignment created successfully",
+                AssignmentId = assignment.Id,
+            });
+        }
+
         [HttpDelete("DeleteAssignment/{assignmentId}")]
         public async Task<IActionResult> DeleteAssignment(int assignmentId)
         {

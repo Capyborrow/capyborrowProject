@@ -18,7 +18,7 @@ namespace capyborrowProject.Data
         public DbSet<Attendance> Attendances { get; set; }
         public DbSet<AssignmentFile> AssignmentFiles { get; set; }
         public DbSet<SubmissionFile> SubmissionFiles { get; set; }
-
+        public DbSet<TempAssignmentFile> TempAssignmentFiles { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

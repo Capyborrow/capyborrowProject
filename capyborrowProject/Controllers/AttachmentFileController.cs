@@ -36,6 +36,28 @@ namespace capyborrowProject.Controllers
             return Ok(assignmentFile);
         }
 
+        [HttpPost("UploadTempAssignmentFile")]
+        public async Task<IActionResult> UploadTempAssignmentFile(IFormFile file)
+        {
+            if (file is null || file.Length == 0)
+                return BadRequest("Invalid file.");
+
+            using var stream = file.OpenReadStream();
+            var fileUrl = await blobStorageService.UploadFileAsync(stream, file.FileName, "assignment", file.ContentType);
+
+            var tempAssignmentFile = new TempAssignmentFile
+            {
+                FileUrl = fileUrl,
+                FileName = file.FileName
+            };
+
+            context.TempAssignmentFiles.Add(tempAssignmentFile);
+            await context.SaveChangesAsync();
+
+            return Ok(tempAssignmentFile);
+        }
+
+
         [HttpPost("{studentId}/{assignmentId}/upload")]
         public async Task<IActionResult> UploadSubmissionFile(string studentId, int assignmentId, IFormFile file)
         {
