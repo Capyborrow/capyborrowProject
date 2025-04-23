@@ -277,5 +277,28 @@ namespace capyborrowProject.Controllers
 
             return Ok("Score updated");
         }
+
+        [HttpPut("CancelAssignmentGrade/{studentId}/{assignmentId}")]
+        public async Task<IActionResult> CancelAssignmentGrade(string studentId, int assignmentId)
+        {
+            var studentAssignment = await context.StudentAssignments
+                .FirstOrDefaultAsync(sa =>
+                    sa.StudentId == studentId &&
+                    sa.AssignmentId == assignmentId);
+
+            if (studentAssignment is null)
+                return NotFound("StudentAssignment not found");
+
+            studentAssignment.Score = null;
+
+            await context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                Message = "Grade cancelled successfully",
+                StudentAssignmentId = assignmentId
+            });
+        }
+
     }
 }
