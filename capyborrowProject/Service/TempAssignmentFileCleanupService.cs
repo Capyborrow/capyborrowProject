@@ -5,8 +5,8 @@ namespace capyborrowProject.Service
 {
     public class TempAssignmentFileCleanupService(IServiceProvider serviceProvider) : BackgroundService
     {
-        private readonly TimeSpan _cleanupInterval = TimeSpan.FromMinutes(30);
-        private readonly TimeSpan _expirationTime = TimeSpan.FromHours(1);
+        private readonly TimeSpan _cleanupInterval = TimeSpan.FromMinutes(1);
+        private readonly TimeSpan _expirationTime = TimeSpan.FromMinutes(2);
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -25,7 +25,7 @@ namespace capyborrowProject.Service
                 {
                     try
                     {
-                        await blobService.DeleteFileAsync(file.FileUrl, "assignment");
+                        await blobService.DeleteFileAsync(file.FileName, "assignment");
                         context.TempAssignmentFiles.Remove(file);
                     }
                     catch (Exception)
