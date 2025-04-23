@@ -6,8 +6,8 @@ namespace capyborrowProject.Models
     {
         Attended,
         Skipped,
-        Excused,
         Unknown,
+        Excused,
         Cancelled
     }
     public class Attendance
