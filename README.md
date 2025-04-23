@@ -23,18 +23,25 @@
 
 # Documentation
 
-## Table of Contents
+# Table of Contents
+
 - [Introduction](#introduction)
 - [Getting started](#getting-started)
 - [Project structure](#project-stucture)
 - [AuthController Overview](#authcontroller-overview)
-- [Useful links](#useful-links)
+- [Services Overview](#services-overview)
+- [Controllers Overview](#controllers-overview)
+- [Error Handling](#error-handling)
+- [Roles & Authorization](#roles--authorization)
+- [Swagger](#swagger)
+- [Testing](#testing)
+- [Conclusion](#conclusion)
 
-## Introduction
+# Introduction
 
 The capyborrowProject repository was created to save the backend code for the project, the idea of which is _to create a universal digital platform that will combine all the key functions of the educational process in one convenient interface, simplifying the educational process for students, teachers and administration of the educational institution_.
 
-## Getting started
+# Getting started
 
 To get started with capyborrowProject, follow these steps:
 
@@ -55,131 +62,267 @@ or do it using Visual Studio:
 
 If needed, restore the NuGet packages required for the project. In Visual Studio, this can be done by right-clicking on the solution in the Solution Explorer and selecting "Restore NuGet Packages."
 
-## Project stucture 
-For now, Solution 'capyborrowProject' consists of two projects: _cappyborrowProject_ and _TestProject_.
+# Project stucture 
+
+For now, Solution 'capyborrowProject' consists of two projects: _capyborrowProject_ and _TestProject_.
 
 - **capyborrowProject**: contains the main application code.
-    - **Controllers folder**: contains three API controllers for Teacher and Student models and for handling authentication.
-    - **Data folder**: contains a database context class, the purpose of which is to act as a bridge between the application and the database, enabling the app to interact with the database in an object-oriented way.
-    - **Migrations folder**: contains automatically generated files that create tables in the database based on the code written for models.
-    - **Models folder**: contains classes for entities, folders for predefined tables, join tables and authentication models.
-    - **Service folder**: contains utility classes (JwtService and EmailService) that handle authentication (JWT generation and validation) and email communication using Azure's Email Communication Service.
-- **TestProject**: contains unit tests for the application.
+    - **Controllers folder**: contains API controllers that handle user authentication, user profiles, assignments, groups, lessons, and related operations. Notable controllers include `AuthController`, `StudentController`, `TeacherController`, `AssignmentController`, and `TimetableController`.
+    - **Data folder**: contains the `ApplicationDbContext` class that acts as a bridge between the application and the database using Entity Framework Core.
+    - **Extensions folder**: contains utility extensions for setting up the application pipeline and services (`HostExtensions.cs`).
+    - **Hubs folder**: includes SignalR hubs used for real-time notifications, such as `NotificationHub.cs`.
+    - **Migrations folder**: contains Entity Framework Core migration files that define the database schema evolution, including both initial and incremental changes.
+    - **Models folder**: contains entity classes and supporting data structures, organized into subfolders:
+        - **AuthModels**: models related to authentication and identity management.
+        - **CsvFilesModels**: models used for CSV import/export.
+        - **DTOs**: data transfer objects used to decouple API contracts from domain models.
+        - Other key models include `Student`, `Teacher`, `Assignment`, `Lesson`, `Group`, `Subject`, `Attendance`, `RefreshToken`, and `SubmissionFile`.
+    - **Service folder**: contains service classes responsible for business logic and infrastructure concerns:
+        - `JwtService` handles access and refresh token generation and validation.
+        - `EmailService` sends emails via Azure Communication Services.
+        - `BlobStorageService` manages file storage using Azure Blob Storage.
+        - `NotificationService` handles delivery of in-app notifications.
+    - **appsettings.json**: the main configuration file containing connection strings, secrets, and service-specific settings.
+    - **capyborrowProject.http**: REST client file used for testing API endpoints via Visual Studio's built-in HTTP runner.
+    - **Program.cs**: application entry point, responsible for configuring middleware and starting the web host.
+- **capyborrowProject.Tests**: contains unit and integration tests to ensure application correctness and validate business logic in isolation.
 
-## AuthController Overview
-The `AuthController` is responsible for handling user authentication and authorization in the application. It provides endpoints for user registration, login, access token refresh, logout, password recovery, and email confirmation. This controller leverages ASP.NET Core Identity and JWT authentication for secure user management.
+
+# AuthController Overview
+
+The `AuthController` handles user authentication and authorization within the application. It exposes endpoints for registration, login, token management, password recovery, and email confirmation. The controller is built using ASP.NET Core Identity and JWT for secure authentication.
+
 ### Dependencies
-- `ApplicationDbContext`: Database context for managing user data.
-- `UserManager<ApplicationUser>`: Manages user-related operations (creation, password validation, etc.).
-- `RoleManager<IdentityRole>`: Handles user roles.
-- `JwtService`: Generates and validates JWT tokens.
-- `EmailService`: Sends email notifications.
-### Endpoints
-**Register User** (`POST /api/Auth/Register`)
-  - **Description**: Registers a new user (either Student or Teacher).
-  - **Request Body**:
-    ```
-    {
-      "firstName": "John",
-      "middleName": "A.",
-      "lastName": "Doe",
-      "email": "johndoe@example.com",
-      "password": "SecurePassword123!",
-      "role": "student"
-    }
-  - **Responses**:
-    - `201 Created`: User registered successfully.
-    - `400 Bad Request`: Invalid data or user already exists.
 
-**Login User** (`POST /api/Auth/Login`)
-  - **Description**: Authenticates a user and returns an access token.
-  - **Request Body**:
-    ```
-    {
-      "email": "johndoe@example.com",
-      "password": "SecurePassword123!"
-    }
-  - **Responses**:
-    - `200 OK`: Returns an access token.
-    - `400 Bad Request`: Invalid credentials.
-    - `401 Unauthorized`: Password incorrect.
+- `ApplicationDbContext`: database context for user data.
+- `UserManager<ApplicationUser>`: manages user creation and password validation.
+- `RoleManager<IdentityRole>`: handles user roles.
+- `JwtService`: generates and validates JWT tokens.
+- `EmailService`: sends email notifications via Azure.
 
-**Refresh Access Token** (`POST /api/Auth/RefreshAccessToken`)
-  - **Description**: Refreshes the user's access token using the stored refresh token.
-  - **Responses**:
-    - `200 OK`: Returns a new access token.
-    - `401 Unauthorized`: Missing or invalid refresh token.
+### Functionality
 
-**Logout User** (`POST /api/Auth/Logout`)
-  - **Description**: Logs out a user by invalidating the refresh token.
-  - **Responses**:
-    - `200 OK`: User logged out.
-    - `403 Forbidden`: No valid refresh token found.
+- Register new users with roles (`student`, `teacher`)
+- Authenticate users and return access tokens
+- Refresh access tokens using stored refresh tokens
+- Logout by invalidating tokens
+- Reset passwords via email link
+- Confirm and re-send confirmation emails
+- Check email confirmation status
 
-**Forgot Password** (`POST /api/Auth/ForgotPassword`)
-  - **Description**: Sends a password reset link to the user's email.
-  - **Request Body**:
-    ```
-    {
-      "email": "johndoe@example.com"
-    }
-   - **Responses**:
-     - `200 OK`: Reset link sent.
-     - `400 Bad Request`: User not found.
+### Key Endpoints
 
-**Reset Password** (`POST /api/Auth/ResetPassword`)
-  - **Description**: Resets the user's password using a token.
-  - **Request Body**:
-    ```
-    {
-      "email": "johndoe@example.com",
-      "token": "reset-token",
-      "newPassword": "NewSecurePassword123!"
-    }
-   - **Responses**:
-     - `200 OK`: Password reset successful.
-     - `400 Bad Request`: Invalid token or request.
+- `POST /api/Auth/Register` – register new user
+- `POST /api/Auth/Login` – login with email and password
+- `POST /api/Auth/RefreshAccessToken` – refresh access token via cookie
+- `POST /api/Auth/Logout` – logout user
+- `POST /api/Auth/ForgotPassword` – request password reset
+- `POST /api/Auth/ResetPassword` – reset password using token
+- `POST /api/Auth/ResendConfirmationEmail` – resend confirmation email
+- `POST /api/Auth/ConfirmEmail` – confirm email using token
+- `POST /api/Auth/CheckEmailConfirmation` – check if email is confirmed
 
-**Resend Confirmation Email** (`POST /api/Auth/ResendConfirmationEmail`)
-  - **Description**: Resends the email confirmation link.
-  - **Request Body**:
-    ```
-    {
-      "email": "johndoe@example.com"
-    }
-   - **Responses**:
-     - `200 OK`: Confirmation email resent.
-     - `400 Bad Request`: Email already confirmed or user not found.
+> **Note**:  
+> Refresh tokens are stored in the database and delivered in secure HTTP-only cookies.  
+> Claims include the user's role and email.  
+> Console logging is used for debugging during development and should be disabled in production.
 
-**Confirm Email** (`POST /api/Auth/ConfirmEmail`)
-  - **Description**: Confirms the user's email using a token.
-  - **Request Body**:
-    ```
-    {
-      "email": "johndoe@example.com",
-      "token": "confirmation-token"
-    }
-   - **Responses**:
-     - `200 OK`: Email confirmed.
-     - `400 Bad Request`: Invalid token or request.
+# Services Overview
 
-**Check Email Confirmation** (`POST /api/Auth/CheckEmailConfirmation`)
-  - **Description**: Checks whether a user's email has been confirmed.
-  - **Request Body**:
-    ```
-    {
-      "email": "johndoe@example.com"
-    }
-   - **Responses**:
-     - `200 OK`: Returns `{ "Confirmed": true }` if email is confirmed, otherwise `{ "Confirmed": false }`.
-     - `400 Bad Request`: User not found or invalid request.
+## JwtService
+The `JwtService` class provides functionality for generating and validating **JSON Web Tokens (JWT)** used for user authentication and authorization in the application. It supports the creation and verification of both access tokens and refresh tokens, utilizing configuration settings provided through the JwtSettings section in the app’s configuration.
+### Methods
+`string GenerateAccessToken(IEnumerable<Claim> claims)`
+Generates a JWT access token using the provided claims and access token settings (secret and expiration).
+This token is typically short-lived and used for authenticating user requests.
 
-> [!NOTE]
-> Refresh tokens are stored in the database and secured in HTTP-only cookies.  
-> Claims are used to store user role and email information.  
-> Console logging is used for debugging purposes (should be removed in production).
+`string GenerateRefreshToken(IEnumerable<Claim> claims)`
+Generates a JWT refresh token using the provided claims and refresh token settings.
+This token has a longer lifespan and is used to issue new access tokens after the previous one expires.
 
-## Useful links
-- [For writing documentation](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#lists)
-- [A short CRUD course](https://youtu.be/b8fFRX0T38M?si=lBDJx2gsc41vuBC_)
-- [An API Tutorial](https://youtu.be/sdlt3-ptt9g?si=Iqdk6i4Njr5m23cn)
+`string GenerateJwtToken(IEnumerable<Claim> claims, string secret, TimeSpan expiresIn)`
+Handles the core logic of generating a JWT with the given claims, signing secret, and expiration duration.
+Used internally by both GenerateAccessToken and GenerateRefreshToken.
+
+`ClaimsPrincipal? ValidateAccessToken(string token)`
+Validates a given access token string using the access token secret.
+Returns a ClaimsPrincipal if the token is valid, otherwise returns null.
+
+`ClaimsPrincipal? ValidateRefreshToken(string token)`
+Validates a given refresh token string using the refresh token secret.
+Returns a ClaimsPrincipal if the token is valid, otherwise returns null.
+
+`ClaimsPrincipal? ValidateJwtToken(string token, string secret)`
+Handles the core logic of validating a JWT using the appropriate signing secret.
+Used internally by both ValidateAccessToken and ValidateRefreshToken.
+## EmailService
+The `EmailService` class provides a method to send emails using **Azure Communication Services (ACS)**. It simplifies the process of composing and dispatching email messages within the application by leveraging Azure’s secure and scalable email infrastructure.
+### Methods
+`Task SendEmailAsync(string recipientEmail, string subject, string body)`
+Sends an email message asynchronously using Azure Communication Services.
+## BlobStorageService 
+The `BlobStorageService` class provides an abstraction layer for uploading, downloading, and deleting files using **Azure Blob Storage**. It supports different file types such as assignment files, submission files, and user profile pictures, organizing them into separate containers for better structure and manageability.
+### Methods
+`Task<string> UploadFileAsync(Stream fileStream, string fileName, string fileType, string contentType)`
+Uploads a file stream (assignment or submission) to the corresponding blob container. Returns the public URI of the uploaded file.
+
+`Task<string> UploadProfilePictureAsync(IFormFile file, string userId)`
+Uploads a user's profile picture to the profile picture container. Returns the public URI of the uploaded profile picture.
+
+`Task<bool> DeleteProfilePictureAsync(string profilePictureUrl)`
+Deletes a profile picture from blob storage given its public URL. Returns true if deletion succeeded; false otherwise.
+
+`Task<Stream?> DownloadFileAsync(string fileName, string fileType)`
+Downloads an assignment or submission file as a stream. Returns a readable Stream if the file exists; null otherwise.
+
+`Task<bool> DeleteFileAsync(string fileName, string fileType)`
+Deletes an assignment or submission file from the corresponding container. Returns true if the file was deleted; false if not found.
+
+
+# Controllers Overview
+
+The Controllers folder contains the API controllers responsible for handling various aspects of the application’s functionality. Each controller corresponds to a specific domain or feature and exposes RESTful endpoints to interact with that domain.
+- **AuthController**: handles authentication-related operations including user registration, login, logout, email confirmation, password reset, and access token refresh.
+- **ApplicationUserController**: provides endpoints for retrieving user profile information and filtering users by roles.
+- **StudentController**: manages student-related operations such as viewing profile details, submitting assignments, and accessing personal schedule information.
+- **TeacherController**: responsible for managing teacher data, including assigned subjects, lessons, and created assignments.
+- **AssignmentController**: allows teachers to create, update, and manage assignments, and enables students to view them.
+- **AttachmentFileController**: supports file upload and download for assignment-related documents using Azure Blob Storage.
+- **CsvImportController**: enables importing structured data (e.g., students, subjects, schedules) from CSV files to simplify bulk data entry.
+- **GroupController**: manages academic groups, including group creation, student assignments, and lesson scheduling per group.
+- **LessonController**: provides endpoints for managing lessons, including creation, updating, and association with groups and subjects.
+- **SubjectController**: handles subject creation and assignment to groups and teachers.
+- **TimetableController**: returns structured timetable data for students and teachers, based on their roles and associated lessons.
+
+# Error Handling
+
+The backend handles errors explicitly within controller actions. When an operation fails due to invalid input, authentication failure, or business logic constraints, the controller returns a meaningful HTTP status code and a structured error message in the response body.
+
+### Error Response Format
+
+Most error responses are returned in the following JSON format:
+
+```json
+{
+  "message": "User not found.",
+  "errors": {
+    "email": ["Email field is required."],
+    "password": ["Password must contain at least one uppercase letter."]
+  }
+}
+```
+
+### Validation
+
+Request model validation is handled using [ApiController] attribute and ModelState.IsValid checks. When validation fails, the API returns:
+- `400 Bad Request`  —  for invalid input or failed validation.
+- `401 Unauthorized` —  for incorrect credentials or unverified users.
+- `403 Forbidden`    —  for invalid tokens or denied access.
+- `404 Not Found`    —  if the requested resource does not exist.
+
+### Common Status Codes
+
+| Status Code               | Meaning                                       |
+|---------------------------|-----------------------------------------------|
+| 200 OK                    | The request was successful                    |
+| 201 Created               | A new resource was created                    |
+| 400 Bad Request           | The request was invalid or failed validation  |
+| 401 Unauthorized          | Authentication is required or failed          |
+| 403 Forbidden             | Access is denied due to invalid token or role |
+| 404 Not Found             | The requested resource was not found          |
+| 500 Internal Server Error | Unhandled server error (not standardized)     |
+
+### Notes
+
+- Error messages are returned in a consistent format to allow frontend parsing.
+- Token-related errors (expired, missing, or invalid tokens) are logged via OnAuthenticationFailed, OnChallenge, and OnForbidden events in the JwtBearer authentication configuration.
+- There is currently no global exception handler; all error handling is implemented at the controller level.
+
+
+# Roles & Authorization
+
+The application uses role-based authorization to control access to protected resources. Each user is assigned a role during registration, and access to specific endpoints is restricted using ASP.NET Core’s `[Authorize]` attributes and custom policies.
+
+### Available Roles
+
+- `student`: users registered as students.
+- `teacher`: users registered as teachers.
+- `admin`: system administrators (can be created manually via seeding or DB).
+
+### Role Assignment
+
+A role is assigned to a user at the moment of registration (via the `role` field in the request body). Internally, the system uses `UserManager.AddToRoleAsync` to attach the role and add corresponding claims.
+
+### Role-Based Access Control
+
+Controllers and endpoints are protected using the `[Authorize]` attribute and named policies defined in `Program.cs`. Example:
+
+```csharp
+[Authorize(Roles = "teacher")]
+public class AssignmentController : ControllerBase
+```
+
+Additionally, authorization policies are defined during app startup:
+```csharp
+  options.AddPolicy("StudentOrAdmin", policy =>
+     policy.RequireRole("student", "admin"));
+```
+
+### Defined Policies
+
+| Policy Name    | Description                                    |
+|----------------|------------------------------------------------|
+| StudentOrAdmin | Accessible to users with student or admin role |
+| TeacherOrAdmin | Accessible to users with teacher or admin role |
+| AdminOnly	     | Restricted to admin users only                 |
+
+These policies are used in combination with [Authorize(Policy = "...")] to restrict access to specific endpoints or actions.
+
+# Swagger
+
+The backend includes auto-generated interactive documentation using **Swagger (OpenAPI)**, which allows testing and exploring all available endpoints directly from the browser.
+
+### Swagger UI
+
+After running the backend locally in development mode, Swagger UI is available at:
+`https://localhost:{PORT}/swagger`
+
+
+This interface provides:
+- Descriptions of all endpoints grouped by controller
+- Required request parameters and expected responses
+- Support for authentication using JWT Bearer tokens
+
+>  Make sure to authorize using a valid token via the "Authorize" button in the Swagger UI before accessing protected endpoints.
+
+### JWT Token Setup in Swagger
+
+To authorize Swagger requests:
+1. Click the **Authorize** button.
+2. Enter the token in the following format:  
+   `Bearer YOUR_ACCESS_TOKEN_HERE`
+3. Click **Authorize** and close the modal.
+
+# Testing
+
+The `capyborrowProject.Tests` project includes automated tests for backend controllers using **NUnit**.
+
+Currently, it contains:
+
+- **Controllers/AuthControllerTests.cs**  
+  Tests the behavior of the `AuthController` in failure scenarios such as:
+  - Registration with already existing email
+  - Login with unknown user
+  - Forgot password for nonexistent email
+  - Email confirmation with invalid token
+
+Test suite uses:
+- **NUnit** — as the test framework (`[TestFixture]`, `[Test]`)
+- **AutoFixture** with **AutoMoq** — for easy setup of inputs and mocked dependencies
+- **Moq** — for mocking services like `UserManager`, `JwtService`, `EmailService`
+
+Tests focus on controller-level logic and response validation (e.g., returning `BadRequestObjectResult`).
+
+# Conclusion
+
+This documentation outlines the backend of capyborrowProject — its structure, functionality, and testing approach.
