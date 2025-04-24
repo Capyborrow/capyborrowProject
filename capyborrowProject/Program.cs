@@ -46,6 +46,8 @@ builder.Services.Configure<IdentityOptions>(options =>
 builder.Services.AddSingleton<EmailService>();
 builder.Services.AddSingleton<BlobStorageService>();
 
+builder.Services.AddSingleton<SearchService>();
+
 builder.Services.AddHostedService<TempAssignmentFileCleanupService>();
 
 builder.Services.Configure<FormOptions>(options =>
