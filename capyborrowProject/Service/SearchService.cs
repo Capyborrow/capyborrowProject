@@ -28,10 +28,8 @@ namespace capyborrowProject.Service
                 SearchFields =
                 {
                     "Room",
-                    "SubjectTitle_en",
-                    "SubjectTitle_uk",
-                    "TeacherFullName_en",
-                    "TeacherFullName_uk",
+                    "SubjectTitle",
+                    "TeacherFullName",
                     "TeacherEmail"
                 },
                 //Select = {
