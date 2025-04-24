@@ -24,7 +24,7 @@ namespace capyborrowProject.Service
             {
                 IncludeTotalCount = true,
                 Filter = filter,
-                Size = 20,
+                Size = 50,
                 SearchFields =
                 {
                     "Room",
@@ -32,12 +32,15 @@ namespace capyborrowProject.Service
                     "TeacherFullName",
                     "TeacherEmail"
                 },
+
                 //Select = {
-                //    "LessonId", "LessonDate",
-                //    "LessonTypeName", "LessonStatusName",
+                //    "LessonId", 
+                //    "LessonDate",
+                //    "LessonTypeName", 
+                //    "LessonStatusName",
                 //    "Room",
-                //    "SubjectTitle_en", "SubjectTitle_uk",
-                //    "TeacherFullName_en", "TeacherFullName_uk",
+                //    "SubjectTitle",
+                //    "TeacherFullName",
                 //    "TeacherEmail"
                 //}
             };
